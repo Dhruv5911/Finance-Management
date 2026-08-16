@@ -1,0 +1,473 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>FinTrack — Personal Finance Manager</title>
+  <meta name="description" content="Professional personal finance management app to track income, expenses, and analyze your spending habits.">
+
+  <!-- Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+
+  <!-- Styles -->
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+  <!-- ───── SIDEBAR ───── -->
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-brand">
+      <div class="brand-icon">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2z"/><path d="M12 6v6l4 2"/></svg>
+      </div>
+      <span class="brand-name">Fin<strong>Track</strong></span>
+    </div>
+
+    <nav class="sidebar-nav">
+      <a href="#" class="nav-item active" data-page="dashboard" id="nav-dashboard">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+        <span>Dashboard</span>
+      </a>
+      <a href="#" class="nav-item" data-page="transactions" id="nav-transactions">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+        <span>Transactions</span>
+      </a>
+      <a href="#" class="nav-item" data-page="analytics" id="nav-analytics">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+        <span>Analytics</span>
+      </a>
+      <a href="#" class="nav-item" data-page="converter" id="nav-converter">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M8 12h8M12 8v8"/></svg>
+        <span>Currency</span>
+      </a>
+    </nav>
+
+    <div class="sidebar-footer">
+      <button id="theme-toggle" class="theme-btn" aria-label="Toggle Theme">
+        <svg class="icon-moon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+        <svg class="icon-sun hidden" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
+        <span>Light Mode</span>
+      </button>
+    </div>
+  </aside>
+
+  <!-- Mobile overlay -->
+  <div class="sidebar-overlay" id="sidebar-overlay"></div>
+
+  <!-- ───── MAIN WRAPPER ───── -->
+  <div class="app-wrapper">
+
+    <!-- Top Bar -->
+    <header class="topbar">
+      <button class="hamburger" id="hamburger" aria-label="Open Menu">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+      </button>
+      <div class="topbar-title" id="topbar-title">Dashboard</div>
+      <div class="topbar-actions">
+        <button class="btn-icon-action" id="demo-data-btn" title="Load Demo Data">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"/></svg>
+        </button>
+        <button class="btn-icon-action" id="export-csv-btn" title="Export CSV">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg>
+        </button>
+        <button class="btn-pill btn-add-quick" id="quick-add-btn">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          Add Transaction
+        </button>
+      </div>
+    </header>
+
+    <!-- ═══════════════ PAGE: DASHBOARD ═══════════════ -->
+    <main class="page active" id="page-dashboard">
+      <div class="page-inner">
+
+        <!-- Greeting -->
+        <div class="page-heading">
+          <h1>Overview <span class="badge-live">Live</span></h1>
+          <p class="sub">Your financial summary at a glance.</p>
+        </div>
+
+        <!-- KPI Cards -->
+        <div class="kpi-grid">
+          <div class="kpi-card kpi-balance">
+            <div class="kpi-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2"/></svg></div>
+            <div class="kpi-body">
+              <p class="kpi-label">Net Balance</p>
+              <h2 class="kpi-value" id="total-balance">$0.00</h2>
+            </div>
+            <div class="kpi-trend" id="balance-trend"></div>
+          </div>
+          <div class="kpi-card kpi-income">
+            <div class="kpi-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg></div>
+            <div class="kpi-body">
+              <p class="kpi-label">Total Income</p>
+              <h2 class="kpi-value" id="total-income">$0.00</h2>
+            </div>
+          </div>
+          <div class="kpi-card kpi-expense">
+            <div class="kpi-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 18 13.5 8.5 8.5 13.5 1 6"/><polyline points="17 18 23 18 23 12"/></svg></div>
+            <div class="kpi-body">
+              <p class="kpi-label">Total Expenses</p>
+              <h2 class="kpi-value" id="total-expense">$0.00</h2>
+            </div>
+          </div>
+          <div class="kpi-card kpi-count">
+            <div class="kpi-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg></div>
+            <div class="kpi-body">
+              <p class="kpi-label">Transactions</p>
+              <h2 class="kpi-value" id="transaction-count">0</h2>
+            </div>
+          </div>
+        </div>
+
+        <!-- Dashboard Lower Grid -->
+        <div class="dash-grid">
+
+          <!-- Left Column -->
+          <div class="dash-main">
+            <!-- Balance History Chart -->
+            <section class="glass-card chart-card">
+              <div class="card-head">
+                <div>
+                  <h3>Balance Trend</h3>
+                  <p class="card-sub">Cumulative net account worth</p>
+                </div>
+              </div>
+              <div class="chart-container-wrapper">
+                <div class="chart-tooltip" id="chart-tooltip"></div>
+                <svg id="trend-chart" viewBox="0 0 600 220" preserveAspectRatio="none"></svg>
+              </div>
+            </section>
+
+            <!-- Recent Transactions -->
+            <section class="glass-card recent-card">
+              <div class="card-head">
+                <h3>Recent Transactions</h3>
+                <button class="link-btn" data-goto="transactions">View All →</button>
+              </div>
+              <div id="recent-list" class="transaction-list"></div>
+            </section>
+          </div>
+
+          <!-- Right Column -->
+          <div class="dash-sidebar">
+            <!-- Virtual Debit Card -->
+            <div class="virtual-card-wrapper">
+              <div class="vcard animate-enter">
+                <div class="vcard-gloss"></div>
+                <div class="vcard-top">
+                  <div class="vcard-logo">
+                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" class="vcard-icon"><rect x="2" y="5" width="20" height="14" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/></svg>
+                    <span>FinTrack <strong>Platinum</strong></span>
+                  </div>
+                  <div class="vcard-contactless">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 8a10 10 0 0 1 14 0M7 11a6 6 0 0 1 10 0M9 14a2 2 0 0 1 6 0"/></svg>
+                  </div>
+                </div>
+                <div class="vcard-middle">
+                  <div class="vcard-balance-label">CARD BALANCE</div>
+                  <div class="vcard-balance" id="card-balance-val">$0.00</div>
+                </div>
+                <div class="vcard-bottom">
+                  <div class="vcard-number">•••• •••• •••• 8824</div>
+                  <div class="vcard-meta">
+                    <div class="vcard-holder">
+                      <label>Cardholder</label>
+                      <span>FINANCE MANAGER</span>
+                    </div>
+                    <div class="vcard-expiry">
+                      <label>Expires</label>
+                      <span>12 / 30</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Budgets Section -->
+            <section class="glass-card budget-card">
+              <div class="card-head">
+                <h3>Monthly Budgets</h3>
+                <button class="link-btn" id="btn-manage-budget">Set Budget</button>
+              </div>
+              <div class="budget-body" id="budget-list">
+                <!-- Budgets generated in JS -->
+              </div>
+            </section>
+
+            <!-- Quick Add -->
+            <section class="glass-card quick-form-card" id="quick-form-section">
+              <div class="card-head"><h3>Add Transaction</h3></div>
+              <form id="transaction-form" novalidate>
+                <div class="form-group">
+                  <label for="desc">Description</label>
+                  <input type="text" id="desc" class="form-control" placeholder="e.g. Coffee, Salary…">
+                  <span class="error-msg" id="error-desc"></span>
+                </div>
+                <div class="form-row">
+                  <div class="form-group">
+                    <label for="amount">Amount ($)</label>
+                    <input type="number" id="amount" class="form-control" placeholder="0.00" step="0.01">
+                    <span class="error-msg" id="error-amount"></span>
+                  </div>
+                  <div class="form-group">
+                    <label for="date">Date</label>
+                    <input type="date" id="date" class="form-control">
+                    <span class="error-msg" id="error-date"></span>
+                  </div>
+                </div>
+                <div class="form-group">
+                  <label>Type</label>
+                  <div class="type-toggle">
+                    <label class="type-option" id="lbl-income">
+                      <input type="radio" name="type" value="income" checked>
+                      <span>↑ Income</span>
+                    </label>
+                    <label class="type-option" id="lbl-expense">
+                      <input type="radio" name="type" value="expense">
+                      <span>↓ Expense</span>
+                    </label>
+                  </div>
+                </div>
+                <div class="form-group">
+                  <label for="category">Category</label>
+                  <select id="category" class="form-control">
+                    <option value="Food">🍔 Food</option>
+                    <option value="Transport">🚗 Transport</option>
+                    <option value="Shopping">🛍️ Shopping</option>
+                    <option value="Bills">📄 Bills</option>
+                    <option value="Entertainment">🎬 Entertainment</option>
+                    <option value="Salary">💼 Salary</option>
+                    <option value="Other">📦 Other</option>
+                  </select>
+                </div>
+                <button type="submit" class="btn-submit" id="submit-btn">Add Transaction</button>
+              </form>
+            </section>
+          </div>
+
+        </div>
+      </div>
+    </main>
+
+    <!-- ═══════════════ PAGE: TRANSACTIONS ═══════════════ -->
+    <main class="page" id="page-transactions">
+      <div class="page-inner">
+        <div class="page-heading">
+          <h1>Transactions</h1>
+          <p class="sub">All your recorded income and expenses.</p>
+        </div>
+
+        <section class="glass-card">
+          <!-- Filters Bar -->
+          <div class="filters-bar">
+            <div class="filter-group">
+              <label for="filter-type">Type</label>
+              <select id="filter-type" class="form-control select-sm">
+                <option value="all">All Types</option>
+                <option value="income">Income</option>
+                <option value="expense">Expense</option>
+              </select>
+            </div>
+            <div class="filter-group">
+              <label for="filter-category">Category</label>
+              <select id="filter-category" class="form-control select-sm">
+                <option value="all">All Categories</option>
+                <option value="Food">Food</option>
+                <option value="Transport">Transport</option>
+                <option value="Shopping">Shopping</option>
+                <option value="Bills">Bills</option>
+                <option value="Entertainment">Entertainment</option>
+                <option value="Salary">Salary</option>
+                <option value="Other">Other</option>
+              </select>
+            </div>
+            <div class="filter-group">
+              <label for="sort-by">Sort By</label>
+              <select id="sort-by" class="form-control select-sm">
+                <option value="newest">Newest First</option>
+                <option value="oldest">Oldest First</option>
+                <option value="highest">Highest Amount</option>
+                <option value="lowest">Lowest Amount</option>
+              </select>
+            </div>
+            <div class="filter-group filter-search">
+              <label for="search-input">Search</label>
+              <input type="text" id="search-input" class="form-control select-sm" placeholder="Search description…">
+            </div>
+          </div>
+          <div id="transaction-list" class="transaction-list full-list"></div>
+        </section>
+      </div>
+    </main>
+
+    <!-- ═══════════════ PAGE: ANALYTICS ═══════════════ -->
+    <main class="page" id="page-analytics">
+      <div class="page-inner">
+        <div class="page-heading">
+          <h1>Analytics</h1>
+          <p class="sub">Visual breakdown of your spending habits.</p>
+        </div>
+
+        <div class="analytics-grid">
+          <!-- Expense Breakdown Bar Chart -->
+          <section class="glass-card">
+            <div class="card-head"><h3>Expense Breakdown by Category</h3></div>
+            <div id="category-chart" class="chart-body">
+              <div class="empty-state">No expenses recorded yet.</div>
+            </div>
+          </section>
+
+          <!-- Savings Rate -->
+          <section class="glass-card">
+            <div class="card-head"><h3>Savings Rate</h3></div>
+            <div class="chart-body savings-ring-wrap">
+              <div class="ring-chart-container">
+                <svg class="ring-chart" viewBox="0 0 120 120">
+                  <circle class="ring-bg" cx="60" cy="60" r="48" />
+                  <circle class="ring-fill" id="savings-ring" cx="60" cy="60" r="48" />
+                </svg>
+                <div class="ring-center">
+                  <span class="ring-value" id="savings-pct">0%</span>
+                  <span class="ring-label">Saved</span>
+                </div>
+              </div>
+              <div class="savings-stats">
+                <div class="stat-row">
+                  <span class="dot dot-green"></span>
+                  <span>Income</span>
+                  <strong id="ana-income">$0.00</strong>
+                </div>
+                <div class="stat-row">
+                  <span class="dot dot-red"></span>
+                  <span>Expenses</span>
+                  <strong id="ana-expense">$0.00</strong>
+                </div>
+                <div class="stat-row">
+                  <span class="dot dot-blue"></span>
+                  <span>Savings</span>
+                  <strong id="ana-savings">$0.00</strong>
+                </div>
+              </div>
+            </div>
+          </section>
+
+          <!-- Income vs Expense Table -->
+          <section class="glass-card span-2">
+            <div class="card-head"><h3>Category Summary</h3></div>
+            <div class="chart-body">
+              <table class="summary-table" id="category-table">
+                <thead>
+                  <tr>
+                    <th>Category</th>
+                    <th>Transactions</th>
+                    <th>Total Amount</th>
+                    <th>Type</th>
+                  </tr>
+                </thead>
+                <tbody id="category-table-body">
+                  <tr><td colspan="4" class="empty-state">No data yet.</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </section>
+        </div>
+      </div>
+    </main>
+
+    <!-- ═══════════════ PAGE: CURRENCY CONVERTER ═══════════════ -->
+    <main class="page" id="page-converter">
+      <div class="page-inner">
+        <div class="page-heading">
+          <h1>Currency Converter</h1>
+          <p class="sub">Live exchange rates via open.er-api.com</p>
+        </div>
+
+        <div class="converter-layout">
+          <section class="glass-card converter-card">
+            <div class="card-head"><h3>Convert Currency</h3></div>
+            <div class="converter-body">
+              <div class="converter-row">
+                <div class="form-group">
+                  <label for="converter-amount">Amount</label>
+                  <input type="number" id="converter-amount" class="form-control conv-input" placeholder="100" min="0">
+                </div>
+                <div class="form-group">
+                  <label for="conv-from">From</label>
+                  <select id="conv-from" class="form-control">
+                    <option value="USD">🇺🇸 USD</option>
+                    <option value="EUR">🇪🇺 EUR</option>
+                    <option value="GBP">🇬🇧 GBP</option>
+                    <option value="JPY">🇯🇵 JPY</option>
+                    <option value="AUD">🇦🇺 AUD</option>
+                    <option value="CAD">🇨🇦 CAD</option>
+                    <option value="INR">🇮🇳 INR</option>
+                    <option value="CNY">🇨🇳 CNY</option>
+                    <option value="CHF">🇨🇭 CHF</option>
+                  </select>
+                </div>
+                <button class="swap-btn" id="swap-btn" aria-label="Swap currencies">
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="17 1 21 5 17 9"/><path d="M3 11V9a4 4 0 0 1 4-4h14"/><polyline points="7 23 3 19 7 15"/><path d="M21 13v2a4 4 0 0 1-4 4H3"/></svg>
+                </button>
+                <div class="form-group">
+                  <label for="conv-to">To</label>
+                  <select id="conv-to" class="form-control">
+                    <option value="USD">🇺🇸 USD</option>
+                    <option value="EUR" selected>🇪🇺 EUR</option>
+                    <option value="GBP">🇬🇧 GBP</option>
+                    <option value="JPY">🇯🇵 JPY</option>
+                    <option value="AUD">🇦🇺 AUD</option>
+                    <option value="CAD">🇨🇦 CAD</option>
+                    <option value="INR">🇮🇳 INR</option>
+                    <option value="CNY">🇨🇳 CNY</option>
+                    <option value="CHF">🇨🇭 CHF</option>
+                  </select>
+                </div>
+              </div>
+              <button class="btn-submit" id="convert-btn">Convert</button>
+
+              <div class="conv-result-box" id="conv-result-box">
+                <div id="converter-loading" class="conv-loading hidden">
+                  <div class="spinner"></div> Fetching live rates…
+                </div>
+                <div id="converter-output" class="conv-output hidden"></div>
+                <div id="converter-error" class="conv-error hidden"></div>
+              </div>
+            </div>
+          </section>
+
+          <!-- Rate Cards -->
+          <section class="glass-card rates-card">
+            <div class="card-head"><h3>Popular Rates (vs USD)</h3></div>
+            <div class="rates-body" id="rates-list">
+              <div class="empty-state">Click Convert to load rates.</div>
+            </div>
+          </section>
+        </div>
+      </div>
+    </main>
+
+  </div><!-- /app-wrapper -->
+
+  <!-- Quick-Add Modal -->
+  <div class="modal-backdrop hidden" id="modal-backdrop">
+    <div class="modal" id="modal">
+      <div class="modal-head">
+        <h3>New Transaction</h3>
+        <button class="modal-close" id="modal-close">✕</button>
+      </div>
+      <div class="modal-body">
+        <p class="modal-hint">Fill in the details below and hit Add.</p>
+        <div id="modal-form-target"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast Container -->
+  <div id="toast-container" class="toast-container"></div>
+
+  <script src="script.js"></script>
+</body>
+</html>
