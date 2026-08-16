@@ -9,7 +9,7 @@
   <!-- Fonts -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,700&family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;600&display=swap" rel="stylesheet">
 
   <!-- Styles -->
   <link rel="stylesheet" href="style.css">
@@ -17,6 +17,8 @@
 <body>
 
   <!-- ───── SIDEBAR ───── -->
+
+  
   <aside class="sidebar" id="sidebar">
     <div class="sidebar-brand">
       <div class="brand-icon">
@@ -41,6 +43,13 @@
       <a href="#" class="nav-item" data-page="converter" id="nav-converter">
         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M8 12h8M12 8v8"/></svg>
         <span>Currency</span>
+      </a>
+      <a href="#" class="nav-item" data-page="ai-assistant" id="nav-ai-assistant">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M9.813 15.904L9 21L8.188 15.904L3.102 15L8.188 14.096L9 9L9.813 14.096L14.898 15L9.813 15.904Z" />
+          <path d="M19.008 5.452L18.5 8L17.992 5.452L15.452 5L17.992 4.548L18.5 2L19.008 4.548L21.548 5L19.008 5.452Z" />
+        </svg>
+        <span>AI Assistant</span>
       </a>
     </nav>
 
@@ -127,6 +136,24 @@
 
           <!-- Left Column -->
           <div class="dash-main">
+            <!-- AI Insight Card -->
+            <section class="glass-card ai-insight-card animate-enter" id="ai-insight-section" style="margin-bottom: 1.5rem;">
+              <div class="ai-insight-header">
+                <div class="ai-insight-title">
+                  <span class="ai-sparkle-icon">✨</span>
+                  <h3>AI Financial Insight</h3>
+                </div>
+                <span class="ai-badge">AI Assistant</span>
+              </div>
+              <div class="ai-insight-body" id="ai-insight-content">
+                <!-- Skeleton loader or default text -->
+                <div class="ai-skeleton">
+                  <div class="skeleton-line line-1"></div>
+                  <div class="skeleton-line line-2"></div>
+                </div>
+              </div>
+            </section>
+
             <!-- Balance History Chart -->
             <section class="glass-card chart-card">
               <div class="card-head">

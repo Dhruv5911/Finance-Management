@@ -20,7 +20,7 @@ const CATEGORY_ICONS = {
   Bills: '📄', Entertainment: '🎬', Salary: '💼', Other: '📦'
 };
 const BAR_COLORS = [
-  '#6c63ff','#00d4aa','#ff5e7d','#ffd166','#4ecdc4','#a29bfe','#fd79a8'
+  '#c9a35a','#3ecf8e','#ef6f6f','#d9a441','#6f92b8','#e2c583','#b98d6f'
 ];
 
 const DEMO_TRANSACTIONS = [
@@ -51,12 +51,10 @@ function loadTransactions() {
   if (stored) {
     transactions = JSON.parse(stored);
   } else {
-    // Populate with default rich demo transactions on first load so it looks gorgeous!
     transactions = [...DEMO_TRANSACTIONS];
     saveTransactions();
   }
 
-  // Load budgets
   const storedBudgets = localStorage.getItem(BUDGET_STORAGE_KEY);
   if (storedBudgets) {
     budgets = JSON.parse(storedBudgets);
@@ -160,7 +158,6 @@ function updateSummary(data) {
   document.getElementById('total-expense').textContent  = fmt(totals.expense);
   document.getElementById('transaction-count').textContent = data.length;
 
-  // Update holographic credit card balance
   const cardBalVal = document.getElementById('card-balance-val');
   if (cardBalVal) {
     cardBalVal.textContent = fmt(netBalance);
@@ -250,12 +247,10 @@ function renderAnalytics() {
   document.getElementById('ana-savings').textContent = fmt(savings);
   document.getElementById('savings-pct').textContent = savingsPct.toFixed(1) + '%';
 
-  // Ring
   const circumference = 301.6;
   const offset = circumference - (savingsPct / 100) * circumference;
   document.getElementById('savings-ring').style.strokeDashoffset = offset;
 
-  // Bar chart
   if (!expenses.length) {
     categoryChart.innerHTML = '<div class="empty-state">No expense data.</div>';
   } else {
@@ -281,7 +276,6 @@ function renderAnalytics() {
     }).join('');
   }
 
-  // Table
   const allCats = transactions.reduce((acc, tx) => {
     const key = tx.category + '|' + tx.type;
     if (!acc[key]) acc[key] = { category: tx.category, type: tx.type, count: 0, total: 0 };
@@ -384,14 +378,12 @@ function openModal() {
   if (modalHint) modalHint.textContent = 'Fill in the details below and hit Add.';
 
   modalBackdrop.classList.remove('hidden');
-  // Move form into modal
   document.getElementById('modal-form-target').innerHTML = '';
   document.getElementById('modal-form-target').appendChild(form);
 }
 
 function closeModal() {
   modalBackdrop.classList.add('hidden');
-  // Return form to quick-form-section
   const target = document.getElementById('quick-form-section');
   if (target && !target.contains(form)) target.appendChild(form);
 }
@@ -411,7 +403,7 @@ function openBudgetModal() {
   if (modalHint) modalHint.textContent = 'Configure your target monthly spending limit for each category.';
   
   let optionsHTML = Object.keys(CATEGORY_ICONS)
-    .filter(cat => cat !== 'Salary') // salary doesn't need a budget
+    .filter(cat => cat !== 'Salary')
     .map(cat => `<option value="${cat}">${CATEGORY_ICONS[cat]} ${cat}</option>`).join('');
     
   target.innerHTML = `
@@ -435,7 +427,6 @@ function openBudgetModal() {
   const catSel = document.getElementById('budget-cat');
   const limitIn = document.getElementById('budget-limit');
   
-  // Set current limit value
   catSel.addEventListener('change', () => {
     limitIn.value = budgets[catSel.value] || '';
   });
@@ -555,7 +546,6 @@ async function convertCurrency() {
       <div style="font-size:0.75rem;color:var(--text2);margin-top:0.4rem">1 ${from} = ${rate.toFixed(4)} ${to}</div>`;
     convOutput.classList.remove('hidden');
 
-    // Popular rates
     const popularRates = POPULAR_CURRENCIES.filter(c => c !== from).map(c => ({
       code: c, rate: data.rates[c]
     }));
@@ -606,10 +596,8 @@ function showToast(title, message, type = 'success') {
 
   container.appendChild(toast);
   
-  // Trigger slide-in reflow
   setTimeout(() => toast.classList.add('show'), 50);
 
-  // Close event
   const closeBtn = toast.querySelector('.toast-close');
   if (closeBtn) {
     closeBtn.addEventListener('click', () => {
@@ -618,7 +606,6 @@ function showToast(title, message, type = 'success') {
     });
   }
 
-  // Auto remove
   setTimeout(() => {
     if (toast.parentNode) {
       toast.classList.remove('show');
@@ -643,7 +630,7 @@ function renderBudgets() {
 
   categories.forEach(cat => {
     const limit = budgets[cat];
-    if (limit <= 0) return; // Skip categories without a budget
+    if (limit <= 0) return;
 
     const spent = catExpenses[cat] || 0;
     const pct = Math.min(100, (spent / limit) * 100);
@@ -690,7 +677,6 @@ function renderLineChart() {
     return;
   }
 
-  // Calculate chronological points
   const sorted = [...transactions].sort((a, b) => new Date(a.date) - new Date(b.date));
   let running = 0;
   const points = [];
@@ -713,7 +699,6 @@ function renderLineChart() {
   let maxBal = Math.max(...balances, 100);
   let minBal = Math.min(...balances, 0);
 
-  // Pad the range slightly so the chart has room
   const range = maxBal - minBal;
   maxBal += range * 0.15;
   minBal -= range * 0.15;
@@ -722,7 +707,6 @@ function renderLineChart() {
     minBal -= 100;
   }
 
-  // Build grid lines and labels HTML
   const steps = 3;
   let gridHTML = '';
   for (let i = 0; i <= steps; i++) {
@@ -734,7 +718,6 @@ function renderLineChart() {
     `;
   }
 
-  // Draw paths
   let pathD = '';
   let areaD = '';
   let pointsHTML = '';
@@ -764,13 +747,11 @@ function renderLineChart() {
       areaD += ` L ${x} ${minY} Z`;
     }
 
-    // Interactive hover circles
     pointsHTML += `
       <circle cx="${x}" cy="${y}" r="4.5" class="chart-point" data-balance="${p.balance}" data-date="${p.date}" data-desc="${p.desc}"></circle>
     `;
   });
 
-  // SVG Definitions for linear gradients
   const defsHTML = `
     <defs>
       <linearGradient id="chart-gradient-area" x1="0" y1="0" x2="0" y2="1">
@@ -784,7 +765,6 @@ function renderLineChart() {
     </defs>
   `;
 
-  // Date labels at bottom
   let timelineHTML = '';
   if (N >= 2) {
     timelineHTML = `
@@ -802,7 +782,6 @@ function renderLineChart() {
     ${timelineHTML}
   `;
 
-  // Attach hover listeners for dynamic tooltips
   const container = document.querySelector('.chart-container-wrapper');
   const tooltip = document.getElementById('chart-tooltip');
   
@@ -820,7 +799,6 @@ function renderLineChart() {
         `;
         tooltip.style.opacity = '1';
 
-        // Position tooltip relative to container
         const containerRect = container.getBoundingClientRect();
         const circleRect = e.target.getBoundingClientRect();
         const tooltipX = circleRect.left - containerRect.left - tooltip.offsetWidth / 2 + 4.5;
@@ -848,7 +826,6 @@ function refreshAll() {
 
 // ── INIT ───────────────────────────────────────────────
 function init() {
-  // Set today's date default
   const today = new Date().toISOString().split('T')[0];
   if (dateInput) dateInput.value = today;
 
