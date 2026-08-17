@@ -1,6 +1,3 @@
-/* script.js */
-
-// ── STATE ──────────────────────────────────────────────
 const STORAGE_KEY = 'finTrack_v2_transactions';
 const THEME_KEY   = 'finTrack_v2_theme';
 const BUDGET_STORAGE_KEY = 'finTrack_v2_budgets';
@@ -67,7 +64,6 @@ function saveTransactions() {
   localStorage.setItem(STORAGE_KEY, JSON.stringify(transactions));
 }
 
-// ── DOM REFS ───────────────────────────────────────────
 const form            = document.getElementById('transaction-form');
 const descInput       = document.getElementById('desc');
 const amountInput     = document.getElementById('amount');
@@ -82,7 +78,6 @@ const sortBy          = document.getElementById('sort-by');
 const searchInput     = document.getElementById('search-input');
 const themeToggle     = document.getElementById('theme-toggle');
 
-// ── NAVIGATION ─────────────────────────────────────────
 const navItems    = document.querySelectorAll('.nav-item');
 const pages       = document.querySelectorAll('.page');
 const topbarTitle = document.getElementById('topbar-title');
@@ -105,7 +100,6 @@ document.querySelectorAll('[data-goto]').forEach(btn => {
   btn.addEventListener('click', () => navigateTo(btn.dataset.goto));
 });
 
-// ── MOBILE SIDEBAR ─────────────────────────────────────
 const sidebar = document.getElementById('sidebar');
 const overlay = document.getElementById('sidebar-overlay');
 const hamburger = document.getElementById('hamburger');
@@ -114,7 +108,6 @@ hamburger.addEventListener('click', () => sidebar.classList.add('open'));
 overlay.addEventListener('click', closeSidebar);
 function closeSidebar() { sidebar.classList.remove('open'); }
 
-// ── THEME ──────────────────────────────────────────────
 function initTheme() {
   const saved = localStorage.getItem(THEME_KEY);
   if (saved === 'light') applyTheme('light');
@@ -135,7 +128,6 @@ themeToggle.addEventListener('click', () => {
   applyTheme(isLight ? 'dark' : 'light');
 });
 
-// ── FORMAT HELPERS ─────────────────────────────────────
 function fmt(amount) {
   return '$' + Math.abs(amount).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 }
@@ -145,7 +137,6 @@ function fmtDate(dateStr) {
   return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
 }
 
-// ── SUMMARY (KPIs) ─────────────────────────────────────
 function updateSummary(data) {
   const totals = data.reduce((acc, tx) => {
     acc[tx.type] += tx.amount;
@@ -164,7 +155,6 @@ function updateSummary(data) {
   }
 }
 
-// ── TRANSACTION ITEM HTML ──────────────────────────────
 function txHTML(tx, mini = false) {
   const icon = CATEGORY_ICONS[tx.category] || '💰';
   const sign = tx.type === 'income' ? '+' : '-';
@@ -190,7 +180,6 @@ function txHTML(tx, mini = false) {
     </div>`;
 }
 
-// ── RENDER RECENT (Dashboard) ──────────────────────────
 function renderRecent() {
   const recent = [...transactions]
     .sort((a, b) => new Date(b.date) - new Date(a.date))
@@ -203,7 +192,6 @@ function renderRecent() {
   }
 }
 
-// ── RENDER FULL LIST (Transactions page) ───────────────
 function getFiltered() {
   let data = [...transactions];
   const typeVal = filterType.value;
@@ -234,7 +222,6 @@ function renderFullList() {
   }
 }
 
-// ── RENDER ANALYTICS ───────────────────────────────────
 function renderAnalytics() {
   const expenses = transactions.filter(tx => tx.type === 'expense');
   const totalIncome  = transactions.reduce((s,tx) => tx.type === 'income'  ? s+tx.amount : s, 0);
@@ -299,7 +286,6 @@ function renderAnalytics() {
   }
 }
 
-// ── FORM ───────────────────────────────────────────────
 function clearErrors() {
   document.querySelectorAll('.error-msg').forEach(el => el.textContent = '');
 }
@@ -345,7 +331,6 @@ searchInput.addEventListener('input', () => {
   window._searchTimer = setTimeout(renderFullList, 250);
 });
 
-// ── DELETE ─────────────────────────────────────────────
 window.deleteTransaction = function(id) {
   const item = document.querySelector(`.transaction-item[data-id="${id}"]`);
   const tx = transactions.find(t => t.id === id);
@@ -361,7 +346,6 @@ window.deleteTransaction = function(id) {
   else doDelete();
 };
 
-// ── QUICK-ADD MODAL & ACTION HANDLERS ──────────────────
 const modalBackdrop = document.getElementById('modal-backdrop');
 const modalClose    = document.getElementById('modal-close');
 const quickAddBtn   = document.getElementById('quick-add-btn');
@@ -388,7 +372,6 @@ function closeModal() {
   if (target && !target.contains(form)) target.appendChild(form);
 }
 
-// Set Budget Modal
 const manageBudgetBtn = document.getElementById('btn-manage-budget');
 if (manageBudgetBtn) {
   manageBudgetBtn.addEventListener('click', openBudgetModal);
@@ -448,7 +431,6 @@ function openBudgetModal() {
   });
 }
 
-// Demo Data Action
 const demoDataBtn = document.getElementById('demo-data-btn');
 if (demoDataBtn) {
   demoDataBtn.addEventListener('click', () => {
@@ -459,7 +441,6 @@ if (demoDataBtn) {
   });
 }
 
-// CSV Export Action
 const exportCsvBtn = document.getElementById('export-csv-btn');
 if (exportCsvBtn) {
   exportCsvBtn.addEventListener('click', () => {
@@ -495,7 +476,6 @@ if (exportCsvBtn) {
   });
 }
 
-// ── CURRENCY CONVERTER ─────────────────────────────────
 const convAmountInput = document.getElementById('converter-amount');
 const convFrom        = document.getElementById('conv-from');
 const convTo          = document.getElementById('conv-to');
@@ -571,7 +551,6 @@ swapBtn.addEventListener('click', () => {
 });
 convAmountInput.addEventListener('keydown', e => { if (e.key === 'Enter') convertCurrency(); });
 
-// ── TOAST NOTIFICATIONS ────────────────────────────────
 function showToast(title, message, type = 'success') {
   const container = document.getElementById('toast-container');
   if (!container) return;
@@ -614,7 +593,6 @@ function showToast(title, message, type = 'success') {
   }, 4000);
 }
 
-// ── BUDGET RENDERING ──────────────────────────────────
 function renderBudgets() {
   const budgetList = document.getElementById('budget-list');
   if (!budgetList) return;
@@ -663,7 +641,6 @@ function renderBudgets() {
   }
 }
 
-// ── BALANCE TREND LINE CHART (SVG) ────────────────────
 function renderLineChart() {
   const trendChart = document.getElementById('trend-chart');
   if (!trendChart) return;
@@ -815,7 +792,6 @@ function renderLineChart() {
   }
 }
 
-// ── REFRESH ALL ────────────────────────────────────────
 function refreshAll() {
   updateSummary(transactions);
   renderRecent();
@@ -824,7 +800,6 @@ function refreshAll() {
   renderBudgets();
 }
 
-// ── INIT ───────────────────────────────────────────────
 function init() {
   const today = new Date().toISOString().split('T')[0];
   if (dateInput) dateInput.value = today;

@@ -6,17 +6,13 @@
   <title>FinTrack — Personal Finance Manager</title>
   <meta name="description" content="Professional personal finance management app to track income, expenses, and analyze your spending habits.">
 
-  <!-- Fonts -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,700&family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;600&display=swap" rel="stylesheet">
 
-  <!-- Styles -->
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
-
-  <!-- ───── SIDEBAR ───── -->
 
   
   <aside class="sidebar" id="sidebar">
@@ -78,23 +74,18 @@
     </button>
   </aside>
 
-  <!-- Mobile overlay -->
   <div class="sidebar-overlay" id="sidebar-overlay"></div>
 
-  <!-- ───── MAIN WRAPPER ───── -->
   <div class="app-wrapper">
 
-    <!-- ═══════════════ PAGE: DASHBOARD ═══════════════ -->
     <main class="page active" id="page-dashboard">
       <div class="page-inner">
 
-        <!-- Greeting -->
         <div class="page-heading">
           <h1>Overview <span class="badge-live">Live</span></h1>
           <p class="sub">Your financial summary at a glance.</p>
         </div>
 
-        <!-- KPI Cards -->
         <div class="kpi-grid">
           <div class="kpi-card kpi-balance">
             <div class="kpi-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2"/></svg></div>
@@ -127,12 +118,10 @@
           </div>
         </div>
 
-        <!-- Dashboard Lower Grid -->
         <div class="dash-grid">
 
-          <!-- Left Column -->
           <div class="dash-main">
-            <!-- AI Insight Card -->
+            
             <section class="glass-card ai-insight-card animate-enter" id="ai-insight-section" style="margin-bottom: 1.5rem;">
               <div class="ai-insight-header">
                 <div class="ai-insight-title">
@@ -142,7 +131,7 @@
                 <span class="ai-badge">AI Assistant</span>
               </div>
               <div class="ai-insight-body" id="ai-insight-content">
-                <!-- Skeleton loader or default text -->
+                
                 <div class="ai-skeleton">
                   <div class="skeleton-line line-1"></div>
                   <div class="skeleton-line line-2"></div>
@@ -150,7 +139,6 @@
               </div>
             </section>
 
-            <!-- Balance History Chart -->
             <section class="glass-card chart-card">
               <div class="card-head">
                 <div>
@@ -164,7 +152,6 @@
               </div>
             </section>
 
-            <!-- Recent Transactions -->
             <section class="glass-card recent-card">
               <div class="card-head">
                 <h3>Recent Transactions</h3>
@@ -174,9 +161,8 @@
             </section>
           </div>
 
-          <!-- Right Column -->
           <div class="dash-sidebar">
-            <!-- Virtual Debit Card -->
+            
             <div class="virtual-card-wrapper">
               <div class="vcard animate-enter">
                 <div class="vcard-gloss"></div>
@@ -209,18 +195,16 @@
               </div>
             </div>
 
-            <!-- Budgets Section -->
             <section class="glass-card budget-card">
               <div class="card-head">
                 <h3>Monthly Budgets</h3>
                 <button class="link-btn" id="btn-manage-budget">Set Budget</button>
               </div>
               <div class="budget-body" id="budget-list">
-                <!-- Budgets generated in JS -->
+                
               </div>
             </section>
 
-            <!-- Quick Add -->
             <section class="glass-card quick-form-card" id="quick-form-section">
               <div class="card-head"><h3>Add Transaction</h3></div>
               <form id="transaction-form" novalidate>
@@ -275,7 +259,6 @@
       </div>
     </main>
 
-    <!-- ═══════════════ PAGE: TRANSACTIONS ═══════════════ -->
     <main class="page" id="page-transactions">
       <div class="page-inner">
         <div class="page-heading">
@@ -284,7 +267,7 @@
         </div>
 
         <section class="glass-card">
-          <!-- Filters Bar -->
+          
           <div class="filters-bar">
             <div class="filter-group">
               <label for="filter-type">Type</label>
@@ -326,7 +309,6 @@
       </div>
     </main>
 
-    <!-- ═══════════════ PAGE: ANALYTICS ═══════════════ -->
     <main class="page" id="page-analytics">
       <div class="page-inner">
         <div class="page-heading">
@@ -335,7 +317,7 @@
         </div>
 
         <div class="analytics-grid">
-          <!-- Expense Breakdown Bar Chart -->
+          
           <section class="glass-card">
             <div class="card-head"><h3>Expense Breakdown by Category</h3></div>
             <div id="category-chart" class="chart-body">
@@ -343,7 +325,6 @@
             </div>
           </section>
 
-          <!-- Savings Rate -->
           <section class="glass-card">
             <div class="card-head"><h3>Savings Rate</h3></div>
             <div class="chart-body savings-ring-wrap">
@@ -377,7 +358,6 @@
             </div>
           </section>
 
-          <!-- Income vs Expense Table -->
           <section class="glass-card span-2">
             <div class="card-head"><h3>Category Summary</h3></div>
             <div class="chart-body">
@@ -400,7 +380,6 @@
       </div>
     </main>
 
-    <!-- ═══════════════ PAGE: CURRENCY CONVERTER ═══════════════ -->
     <main class="page" id="page-converter">
       <div class="page-inner">
         <div class="page-heading">
@@ -461,7 +440,6 @@
             </div>
           </section>
 
-          <!-- Rate Cards -->
           <section class="glass-card rates-card">
             <div class="card-head"><h3>Popular Rates (vs USD)</h3></div>
             <div class="rates-body" id="rates-list">
@@ -472,9 +450,8 @@
       </div>
     </main>
 
-  </div><!-- /app-wrapper -->
+  </div>
 
-  <!-- Quick-Add Modal -->
   <div class="modal-backdrop hidden" id="modal-backdrop">
     <div class="modal" id="modal">
       <div class="modal-head">
@@ -488,7 +465,6 @@
     </div>
   </div>
 
-  <!-- Toast Container -->
   <div id="toast-container" class="toast-container"></div>
 
   <script src="script.js"></script>
