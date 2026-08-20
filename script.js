@@ -1,7 +1,22 @@
+// ============================================================
+// FinTrack — main app script
+// This file is written to be readable if you're learning JS:
+// each section below is a self-contained chunk you can study
+// on its own. Search for the "SECTION:" labels to jump around.
+// ============================================================
+
+// SECTION: Storage keys
+// We save data in the browser's localStorage so it survives a
+// page refresh. Each key is just a string "bucket name" we use
+// to store/retrieve one piece of data.
 const STORAGE_KEY = 'finTrack_v2_transactions';
 const THEME_KEY   = 'finTrack_v2_theme';
 const BUDGET_STORAGE_KEY = 'finTrack_v2_budgets';
 
+// SECTION: App state
+// "State" just means the data our app is currently working with.
+// transactions: an array of objects, one per income/expense entry.
+// budgets: an object mapping category name -> monthly limit ($).
 let transactions  = [];
 let budgets = {
   Food: 300,
@@ -43,6 +58,10 @@ const DEMO_TRANSACTIONS = [
   { id: 120, desc: 'Bistro Lunch Special', amount: 24.50, date: '2026-08-14', type: 'expense', category: 'Food' },
 ];
 
+// SECTION: Loading & saving data
+// localStorage only stores strings, so we convert our JS array/object
+// to a string with JSON.stringify() before saving, and back with
+// JSON.parse() when reading it out.
 function loadTransactions() {
   const stored = localStorage.getItem(STORAGE_KEY);
   if (stored) {
@@ -64,6 +83,10 @@ function saveTransactions() {
   localStorage.setItem(STORAGE_KEY, JSON.stringify(transactions));
 }
 
+// SECTION: DOM references
+// We grab every HTML element we'll need to read from or write to,
+// once, up front. document.getElementById(id) finds the single
+// element with that id="" attribute in index.html.
 const form            = document.getElementById('transaction-form');
 const descInput       = document.getElementById('desc');
 const amountInput     = document.getElementById('amount');
@@ -78,6 +101,10 @@ const sortBy          = document.getElementById('sort-by');
 const searchInput     = document.getElementById('search-input');
 const themeToggle     = document.getElementById('theme-toggle');
 
+// SECTION: Navigation (switching between pages)
+// This app is a "single page app": every page (Dashboard,
+// Transactions, etc.) already exists in the HTML, hidden with
+// CSS. navigateTo() just shows the one we want and hides the rest.
 const navItems    = document.querySelectorAll('.nav-item');
 const pages       = document.querySelectorAll('.page');
 const topbarTitle = document.getElementById('topbar-title');
@@ -100,6 +127,10 @@ document.querySelectorAll('[data-goto]').forEach(btn => {
   btn.addEventListener('click', () => navigateTo(btn.dataset.goto));
 });
 
+// SECTION: Mobile nav toggle
+// On small screens, the nav links are hidden until the hamburger
+// button is tapped, which adds an "open" CSS class the stylesheet
+// uses to slide/reveal them.
 const sidebar = document.getElementById('sidebar');
 const overlay = document.getElementById('sidebar-overlay');
 const hamburger = document.getElementById('hamburger');
@@ -108,6 +139,11 @@ hamburger.addEventListener('click', () => sidebar.classList.add('open'));
 overlay.addEventListener('click', closeSidebar);
 function closeSidebar() { sidebar.classList.remove('open'); }
 
+// SECTION: Light/dark theme
+// The whole theme is controlled by one CSS class ("light") on
+// <body>. Every color in style.css is a CSS variable that changes
+// value depending on whether that class is present — so toggling
+// one class instantly re-themes the entire app.
 function initTheme() {
   const saved = localStorage.getItem(THEME_KEY);
   if (saved === 'light') applyTheme('light');
@@ -128,6 +164,10 @@ themeToggle.addEventListener('click', () => {
   applyTheme(isLight ? 'dark' : 'light');
 });
 
+// SECTION: Formatting helpers
+// Small, reusable functions that turn raw numbers/dates into the
+// text we actually want to show on screen. Keeping this logic in
+// one place means every part of the app formats money the same way.
 function fmt(amount) {
   return '$' + Math.abs(amount).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 }
@@ -137,6 +177,10 @@ function fmtDate(dateStr) {
   return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
 }
 
+// SECTION: Dashboard summary (the 4 KPI cards + the card balance)
+// reduce() walks the array once and builds up a single running
+// result (here: totals.income and totals.expense) — it's the
+// go-to tool whenever you want to turn "many items" into "one number".
 function updateSummary(data) {
   const totals = data.reduce((acc, tx) => {
     acc[tx.type] += tx.amount;
@@ -153,8 +197,51 @@ function updateSummary(data) {
   if (cardBalVal) {
     cardBalVal.textContent = fmt(netBalance);
   }
+
+  renderBalanceTrend(data);
 }
 
+// Compares this calendar month's net (income - expense) against
+// last month's, and shows a small "up X%" / "down X%" badge.
+// This is a genuinely useful signal — not just decoration — since
+// it tells you at a glance whether you're trending better or worse.
+function renderBalanceTrend(data) {
+  const trendEl = document.getElementById('balance-trend');
+  if (!trendEl) return;
+
+  const now = new Date();
+  const thisMonthKey = `${now.getFullYear()}-${now.getMonth()}`;
+  const lastMonthDate = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+  const lastMonthKey  = `${lastMonthDate.getFullYear()}-${lastMonthDate.getMonth()}`;
+
+  const netForMonth = (monthKey) => data.reduce((sum, tx) => {
+    const d = new Date(tx.date + 'T00:00:00');
+    const key = `${d.getFullYear()}-${d.getMonth()}`;
+    if (key !== monthKey) return sum;
+    return sum + (tx.type === 'income' ? tx.amount : -tx.amount);
+  }, 0);
+
+  const thisNet = netForMonth(thisMonthKey);
+  const lastNet = netForMonth(lastMonthKey);
+
+  if (lastNet === 0) {
+    trendEl.innerHTML = '';
+    return;
+  }
+
+  const change = ((thisNet - lastNet) / Math.abs(lastNet)) * 100;
+  const isUp = change >= 0;
+  trendEl.innerHTML = `
+    <span class="trend-pill ${isUp ? 'trend-up' : 'trend-down'}">
+      ${isUp ? '↑' : '↓'} ${Math.abs(change).toFixed(0)}% vs last month
+    </span>`;
+}
+
+// SECTION: Rendering transactions to HTML
+// This function takes one transaction object and returns an HTML
+// string for it. Template literals (the backtick `` `...` `` syntax)
+// let us mix plain text with ${variables} — much easier to read
+// than gluing strings together with +.
 function txHTML(tx, mini = false) {
   const icon = CATEGORY_ICONS[tx.category] || '💰';
   const sign = tx.type === 'income' ? '+' : '-';
@@ -192,6 +279,10 @@ function renderRecent() {
   }
 }
 
+// SECTION: Filtering & sorting the Transactions page
+// filter() returns a new array containing only the items that
+// pass a test — here we chain three filters (type, category,
+// search text), then sort() re-orders whatever's left.
 function getFiltered() {
   let data = [...transactions];
   const typeVal = filterType.value;
@@ -222,6 +313,10 @@ function renderFullList() {
   }
 }
 
+// SECTION: Analytics page
+// Same reduce() pattern as updateSummary(), just building more
+// interesting shapes: a per-category totals object, then a ring
+// chart percentage, then a full table grouped by category+type.
 function renderAnalytics() {
   const expenses = transactions.filter(tx => tx.type === 'expense');
   const totalIncome  = transactions.reduce((s,tx) => tx.type === 'income'  ? s+tx.amount : s, 0);
@@ -286,6 +381,11 @@ function renderAnalytics() {
   }
 }
 
+// SECTION: Form validation
+// Simple, explicit validation: check each field, collect whether
+// anything failed, and only proceed if `valid` is still true.
+// This pattern (loop/check each rule, track one boolean) scales
+// to almost any form.
 function clearErrors() {
   document.querySelectorAll('.error-msg').forEach(el => el.textContent = '');
 }
@@ -331,6 +431,11 @@ searchInput.addEventListener('input', () => {
   window._searchTimer = setTimeout(renderFullList, 250);
 });
 
+// SECTION: Deleting a transaction
+// We attach this to `window` (instead of a plain function) because
+// the delete button's HTML uses inline onclick="deleteTransaction(...)",
+// and inline handlers can only call functions that exist as global
+// (window-level) names.
 window.deleteTransaction = function(id) {
   const item = document.querySelector(`.transaction-item[data-id="${id}"]`);
   const tx = transactions.find(t => t.id === id);
@@ -346,6 +451,11 @@ window.deleteTransaction = function(id) {
   else doDelete();
 };
 
+// SECTION: Quick-add modal
+// Rather than having two separate forms (one in the sidebar, one
+// in the modal), we physically move the *same* <form> element
+// back and forth between two containers with appendChild(). Its
+// values and event listeners come along with it automatically.
 const modalBackdrop = document.getElementById('modal-backdrop');
 const modalClose    = document.getElementById('modal-close');
 const quickAddBtn   = document.getElementById('quick-add-btn');
@@ -476,6 +586,11 @@ if (exportCsvBtn) {
   });
 }
 
+// SECTION: Currency converter
+// This is the only part of the app that talks to a real external
+// API. fetch() sends a network request and returns a Promise; we
+// `await` it inside an `async function` so the code reads top-to-
+// bottom like normal code, even though it's actually asynchronous.
 const convAmountInput = document.getElementById('converter-amount');
 const convFrom        = document.getElementById('conv-from');
 const convTo          = document.getElementById('conv-to');
@@ -492,6 +607,9 @@ let cacheTime   = 0;
 
 async function fetchRates(base = 'USD') {
   const now = Date.now();
+  // Simple caching: if we fetched this same base currency in the
+  // last 5 minutes (300000ms), reuse it instead of hitting the
+  // network again.
   if (cachedRates && (now - cacheTime) < 300000 && cachedRates.base === base) return cachedRates;
   const res = await fetch(`https://open.er-api.com/v6/latest/${base}`);
   if (!res.ok) throw new Error('Failed to fetch');
@@ -551,6 +669,12 @@ swapBtn.addEventListener('click', () => {
 });
 convAmountInput.addEventListener('keydown', e => { if (e.key === 'Enter') convertCurrency(); });
 
+// SECTION: Toast notifications
+// A "toast" is a small message that pops up and disappears on its
+// own. We build the element, add it to the page, then use
+// setTimeout() twice: once to trigger the entrance animation
+// (after a 50ms delay, so the browser registers the starting
+// state first), and once to auto-dismiss it after 4 seconds.
 function showToast(title, message, type = 'success') {
   const container = document.getElementById('toast-container');
   if (!container) return;
@@ -593,6 +717,10 @@ function showToast(title, message, type = 'success') {
   }, 4000);
 }
 
+// SECTION: Budgets
+// For each budgeted category, work out spent-vs-limit as a
+// percentage, then pick a color class (normal/warning/danger)
+// based on how close to (or over) the limit it is.
 function renderBudgets() {
   const budgetList = document.getElementById('budget-list');
   if (!budgetList) return;
@@ -641,6 +769,12 @@ function renderBudgets() {
   }
 }
 
+// SECTION: Balance trend chart (hand-drawn SVG)
+// There's no charting library here — we're computing pixel
+// coordinates ourselves and building an <svg> path string. It
+// looks like a lot of math, but it's really just two conversions
+// repeated for every point: "which date -> which x pixel" and
+// "which balance -> which y pixel".
 function renderLineChart() {
   const trendChart = document.getElementById('trend-chart');
   if (!trendChart) return;
@@ -792,6 +926,10 @@ function renderLineChart() {
   }
 }
 
+// SECTION: Refresh & init
+// refreshAll() is the one function that re-renders everything —
+// call it any time the underlying data changes (add, delete, load
+// demo data) so the whole UI stays in sync with `transactions`.
 function refreshAll() {
   updateSummary(transactions);
   renderRecent();
@@ -800,6 +938,9 @@ function refreshAll() {
   renderBudgets();
 }
 
+// init() runs once when the page loads — it's the entry point
+// that sets everything else in motion (see the init() call at
+// the very bottom of this file).
 function init() {
   const today = new Date().toISOString().split('T')[0];
   if (dateInput) dateInput.value = today;
