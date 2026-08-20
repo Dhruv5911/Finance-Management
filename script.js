@@ -1,6 +1,11 @@
-const STORAGE_KEY = 'finTrack_v2_transactions';
+const STORAGE_KEY_BASE = 'finTrack_v2_transactions';
 const THEME_KEY   = 'finTrack_v2_theme';
-const BUDGET_STORAGE_KEY = 'finTrack_v2_budgets';
+const BUDGET_STORAGE_KEY_BASE = 'finTrack_v2_budgets';
+
+let currentUserEmail = null;
+function scopedKey(base) {
+  return currentUserEmail ? `${base}::${currentUserEmail}` : base;
+}
 
 let transactions  = [];
 let budgets = {
@@ -43,25 +48,25 @@ const DEMO_TRANSACTIONS = [
   { id: 120, desc: 'Bistro Lunch Special', amount: 24.50, date: '2026-08-14', type: 'expense', category: 'Food' },
 ];
 
-function loadTransactions() {
-  const stored = localStorage.getItem(STORAGE_KEY);
-  if (stored) {
-    transactions = JSON.parse(stored);
-  } else {
-    transactions = [...DEMO_TRANSACTIONS];
-    saveTransactions();
-  }
+function getDefaultBudgets() {
+  return { Food: 300, Transport: 100, Shopping: 200, Bills: 400, Entertainment: 150, Other: 150 };
+}
 
-  const storedBudgets = localStorage.getItem(BUDGET_STORAGE_KEY);
+function loadTransactions() {
+  const stored = localStorage.getItem(scopedKey(STORAGE_KEY_BASE));
+  transactions = stored ? JSON.parse(stored) : [];
+
+  const storedBudgets = localStorage.getItem(scopedKey(BUDGET_STORAGE_KEY_BASE));
   if (storedBudgets) {
     budgets = JSON.parse(storedBudgets);
   } else {
-    localStorage.setItem(BUDGET_STORAGE_KEY, JSON.stringify(budgets));
+    budgets = getDefaultBudgets();
+    localStorage.setItem(scopedKey(BUDGET_STORAGE_KEY_BASE), JSON.stringify(budgets));
   }
 }
 
 function saveTransactions() {
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(transactions));
+  localStorage.setItem(scopedKey(STORAGE_KEY_BASE), JSON.stringify(transactions));
 }
 
 const form            = document.getElementById('transaction-form');
@@ -385,6 +390,8 @@ const modalClose    = document.getElementById('modal-close');
 const quickAddBtn   = document.getElementById('quick-add-btn');
 
 quickAddBtn.addEventListener('click', openModal);
+const dashAddTxBtn = document.getElementById('dash-add-tx-btn');
+if (dashAddTxBtn) dashAddTxBtn.addEventListener('click', openModal);
 modalClose.addEventListener('click', closeModal);
 modalBackdrop.addEventListener('click', e => { if (e.target === modalBackdrop) closeModal(); });
 document.addEventListener('keydown', e => { if (e.key === 'Escape') closeModal(); });
@@ -458,7 +465,7 @@ function openBudgetModal() {
       return;
     }
     budgets[cat] = limit;
-    localStorage.setItem(BUDGET_STORAGE_KEY, JSON.stringify(budgets));
+    localStorage.setItem(scopedKey(BUDGET_STORAGE_KEY_BASE), JSON.stringify(budgets));
     showToast('Success', `Budget for ${cat} set to $${limit.toFixed(2)}`, 'success');
     closeModal();
     renderBudgets();
@@ -871,6 +878,7 @@ authSwitches.forEach(a => a.addEventListener('click', (e) => {
 }));
 
 function showApp(user) {
+  currentUserEmail = user && user.email ? user.email.toLowerCase() : null;
   document.body.classList.add('authed');
   loginScreen.classList.add('hidden');
   const greetEl = document.querySelector('.page-heading h1');
@@ -949,6 +957,7 @@ signinForm.addEventListener('submit', (e) => {
 
 logoutBtn.addEventListener('click', () => {
   localStorage.removeItem(USER_KEY);
+  currentUserEmail = null;
   signinForm.reset();
   signupForm.reset();
   switchAuthTab('signin');
