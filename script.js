@@ -834,16 +834,41 @@ function refreshAll() {
   renderBudgets();
 }
 
-const USER_KEY = 'finTrack_v2_user';
+const ACCOUNTS_KEY = 'finTrack_v2_accounts';
+const USER_KEY      = 'finTrack_v2_user';
 
 const loginScreen = document.getElementById('login-screen');
-const loginForm   = document.getElementById('login-form');
+const signinForm  = document.getElementById('signin-form');
+const signupForm  = document.getElementById('signup-form');
 const logoutBtn   = document.getElementById('logout-btn');
+const authTabs    = document.querySelectorAll('.auth-tab');
+const authSwitches = document.querySelectorAll('.auth-switch');
+const authPanels  = document.querySelectorAll('.auth-panel');
+
+function getAccounts() {
+  const raw = localStorage.getItem(ACCOUNTS_KEY);
+  return raw ? JSON.parse(raw) : [];
+}
+
+function saveAccounts(accounts) {
+  localStorage.setItem(ACCOUNTS_KEY, JSON.stringify(accounts));
+}
 
 function getUser() {
   const raw = localStorage.getItem(USER_KEY);
   return raw ? JSON.parse(raw) : null;
 }
+
+function switchAuthTab(tab) {
+  authTabs.forEach(t => t.classList.toggle('active', t.dataset.tab === tab));
+  authPanels.forEach(p => p.classList.toggle('active', p.id === `panel-${tab}`));
+}
+
+authTabs.forEach(t => t.addEventListener('click', () => switchAuthTab(t.dataset.tab)));
+authSwitches.forEach(a => a.addEventListener('click', (e) => {
+  e.preventDefault();
+  switchAuthTab(a.dataset.tab);
+}));
 
 function showApp(user) {
   document.body.classList.add('authed');
@@ -860,20 +885,32 @@ function showLogin() {
   loginScreen.classList.remove('hidden');
 }
 
-loginForm.addEventListener('submit', (e) => {
+signupForm.addEventListener('submit', (e) => {
   e.preventDefault();
-  document.getElementById('error-login-name').textContent = '';
-  document.getElementById('error-login-email').textContent = '';
+  ['signup-name', 'signup-email', 'signup-password', 'signup-confirm'].forEach(id => {
+    document.getElementById(`error-${id}`).textContent = '';
+  });
 
-  const nameInput  = document.getElementById('login-name');
-  const emailInput = document.getElementById('login-email');
-  const name  = nameInput.value.trim();
-  const email = emailInput.value.trim();
+  const name     = document.getElementById('signup-name').value.trim();
+  const email    = document.getElementById('signup-email').value.trim().toLowerCase();
+  const password = document.getElementById('signup-password').value;
+  const confirm  = document.getElementById('signup-confirm').value;
   let valid = true;
 
-  if (!name) { document.getElementById('error-login-name').textContent = 'Enter your name.'; valid = false; }
-  if (!email || !/^\S+@\S+\.\S+$/.test(email)) { document.getElementById('error-login-email').textContent = 'Enter a valid email.'; valid = false; }
+  if (!name) { document.getElementById('error-signup-name').textContent = 'Enter your name.'; valid = false; }
+  if (!email || !/^\S+@\S+\.\S+$/.test(email)) { document.getElementById('error-signup-email').textContent = 'Enter a valid email.'; valid = false; }
+  if (!password || password.length < 6) { document.getElementById('error-signup-password').textContent = 'At least 6 characters.'; valid = false; }
+  if (confirm !== password) { document.getElementById('error-signup-confirm').textContent = 'Passwords don\u2019t match.'; valid = false; }
+
+  const accounts = getAccounts();
+  if (valid && accounts.some(a => a.email === email)) {
+    document.getElementById('error-signup-email').textContent = 'An account with this email already exists.';
+    valid = false;
+  }
   if (!valid) return;
+
+  accounts.push({ name, email, password });
+  saveAccounts(accounts);
 
   const user = { name, email };
   localStorage.setItem(USER_KEY, JSON.stringify(user));
@@ -881,8 +918,40 @@ loginForm.addEventListener('submit', (e) => {
   init();
 });
 
+signinForm.addEventListener('submit', (e) => {
+  e.preventDefault();
+  document.getElementById('error-signin-email').textContent = '';
+  document.getElementById('error-signin-password').textContent = '';
+
+  const email    = document.getElementById('signin-email').value.trim().toLowerCase();
+  const password = document.getElementById('signin-password').value;
+  let valid = true;
+
+  if (!email) { document.getElementById('error-signin-email').textContent = 'Enter your email.'; valid = false; }
+  if (!password) { document.getElementById('error-signin-password').textContent = 'Enter your password.'; valid = false; }
+  if (!valid) return;
+
+  const account = getAccounts().find(a => a.email === email);
+  if (!account) {
+    document.getElementById('error-signin-email').textContent = 'No account found with this email.';
+    return;
+  }
+  if (account.password !== password) {
+    document.getElementById('error-signin-password').textContent = 'Incorrect password.';
+    return;
+  }
+
+  const user = { name: account.name, email: account.email };
+  localStorage.setItem(USER_KEY, JSON.stringify(user));
+  showApp(user);
+  init();
+});
+
 logoutBtn.addEventListener('click', () => {
   localStorage.removeItem(USER_KEY);
+  signinForm.reset();
+  signupForm.reset();
+  switchAuthTab('signin');
   showLogin();
 });
 

@@ -22,23 +22,61 @@
         </div>
         <span class="brand-name">Fin<strong>Track</strong></span>
       </div>
-      <h1 class="login-title">Welcome back</h1>
-      <p class="login-sub">Sign in to see your finances. Everything stays on this device — nothing is sent anywhere.</p>
 
-      <form id="login-form" novalidate>
-        <div class="form-group">
-          <label for="login-name">Name</label>
-          <input type="text" id="login-name" class="form-control" placeholder="e.g. Alex Morgan" autocomplete="name">
-          <span class="error-msg" id="error-login-name"></span>
-        </div>
-        <div class="form-group">
-          <label for="login-email">Email</label>
-          <input type="email" id="login-email" class="form-control" placeholder="you@example.com" autocomplete="email">
-          <span class="error-msg" id="error-login-email"></span>
-        </div>
-        <button type="submit" class="btn-submit">Sign In</button>
-      </form>
-      <p class="login-hint">No account yet? Just fill in your name and email — an account is created for you locally.</p>
+      <div class="auth-tabs">
+        <button type="button" class="auth-tab active" id="tab-signin" data-tab="signin">Sign In</button>
+        <button type="button" class="auth-tab" id="tab-signup" data-tab="signup">Sign Up</button>
+      </div>
+
+      <div class="auth-panel active" id="panel-signin">
+        <h1 class="login-title">Welcome back</h1>
+        <p class="login-sub">Sign in to see your finances. Everything stays on this device — nothing is sent anywhere.</p>
+
+        <form id="signin-form" novalidate>
+          <div class="form-group">
+            <label for="signin-email">Email</label>
+            <input type="email" id="signin-email" class="form-control" placeholder="you@example.com" autocomplete="email">
+            <span class="error-msg" id="error-signin-email"></span>
+          </div>
+          <div class="form-group">
+            <label for="signin-password">Password</label>
+            <input type="password" id="signin-password" class="form-control" placeholder="••••••••" autocomplete="current-password">
+            <span class="error-msg" id="error-signin-password"></span>
+          </div>
+          <button type="submit" class="btn-submit">Sign In</button>
+        </form>
+        <p class="login-hint">No account yet? <a href="#" class="auth-switch" data-tab="signup">Create one</a></p>
+      </div>
+
+      <div class="auth-panel" id="panel-signup">
+        <h1 class="login-title">Create your account</h1>
+        <p class="login-sub">Takes a few seconds. Your data is stored locally on this device only.</p>
+
+        <form id="signup-form" novalidate>
+          <div class="form-group">
+            <label for="signup-name">Full Name</label>
+            <input type="text" id="signup-name" class="form-control" placeholder="e.g. Alex Morgan" autocomplete="name">
+            <span class="error-msg" id="error-signup-name"></span>
+          </div>
+          <div class="form-group">
+            <label for="signup-email">Email</label>
+            <input type="email" id="signup-email" class="form-control" placeholder="you@example.com" autocomplete="email">
+            <span class="error-msg" id="error-signup-email"></span>
+          </div>
+          <div class="form-group">
+            <label for="signup-password">Password</label>
+            <input type="password" id="signup-password" class="form-control" placeholder="At least 6 characters" autocomplete="new-password">
+            <span class="error-msg" id="error-signup-password"></span>
+          </div>
+          <div class="form-group">
+            <label for="signup-confirm">Confirm Password</label>
+            <input type="password" id="signup-confirm" class="form-control" placeholder="••••••••" autocomplete="new-password">
+            <span class="error-msg" id="error-signup-confirm"></span>
+          </div>
+          <button type="submit" class="btn-submit">Create Account</button>
+        </form>
+        <p class="login-hint">Already have an account? <a href="#" class="auth-switch" data-tab="signin">Sign in</a></p>
+      </div>
     </div>
   </div>
 
