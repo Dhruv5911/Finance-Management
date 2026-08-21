@@ -80,6 +80,29 @@
     </div>
   </div>
 
+  <div class="onboard-screen hidden" id="onboard-screen">
+    <div class="login-card">
+      <div class="login-brand">
+        <div class="brand-icon">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2z"/><path d="M12 6v6l4 2"/></svg>
+        </div>
+        <span class="brand-name">Fin<strong>Track</strong></span>
+      </div>
+      <h1 class="login-title">What's your starting balance?</h1>
+      <p class="login-sub">Enter how much money you currently have. Your dashboard and analytics will be built on top of this.</p>
+
+      <form id="onboard-form" novalidate>
+        <div class="form-group">
+          <label for="onboard-balance">Starting Balance ($)</label>
+          <input type="number" id="onboard-balance" class="form-control" placeholder="0.00" step="0.01" min="0" autofocus>
+          <span class="error-msg" id="error-onboard-balance"></span>
+        </div>
+        <button type="submit" class="btn-submit">Continue to Dashboard</button>
+      </form>
+      <p class="login-hint">You can start at $0 and add income later if you'd rather.</p>
+    </div>
+  </div>
+
   <aside class="sidebar" id="sidebar">
     <div class="sidebar-brand">
       <div class="brand-icon">
@@ -110,9 +133,6 @@
     <div class="topbar-title" id="topbar-title">Dashboard</div>
 
     <div class="sidebar-footer">
-      <button class="btn-icon-action" id="demo-data-btn" title="Load Demo Data">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"/></svg>
-      </button>
       <button class="btn-icon-action" id="export-csv-btn" title="Export CSV">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg>
       </button>
@@ -259,7 +279,7 @@
               </div>
             </section>
 
-            <section class="glass-card quick-form-card" id="quick-form-section">
+            <section class="glass-card quick-form-card hidden" id="quick-form-section">
               <div class="card-head"><h3>Add Transaction</h3></div>
               <form id="transaction-form" novalidate>
                 <div class="form-group">

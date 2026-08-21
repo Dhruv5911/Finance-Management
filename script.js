@@ -1,6 +1,7 @@
 const STORAGE_KEY_BASE = 'finTrack_v2_transactions';
 const THEME_KEY   = 'finTrack_v2_theme';
 const BUDGET_STORAGE_KEY_BASE = 'finTrack_v2_budgets';
+const BALANCE_STORAGE_KEY_BASE = 'finTrack_v2_startingBalance';
 
 let currentUserEmail = null;
 function scopedKey(base) {
@@ -8,6 +9,7 @@ function scopedKey(base) {
 }
 
 let transactions  = [];
+let startingBalance = 0;
 let budgets = {
   Food: 300,
   Transport: 100,
@@ -25,36 +27,28 @@ const BAR_COLORS = [
   '#c9a35a','#3ecf8e','#ef6f6f','#d9a441','#6f92b8','#e2c583','#b98d6f'
 ];
 
-const DEMO_TRANSACTIONS = [
-  { id: 101, desc: 'Web Development Freelance', amount: 3200, date: '2026-07-15', type: 'income', category: 'Salary' },
-  { id: 102, desc: 'Organic Groceries', amount: 164.50, date: '2026-07-16', type: 'expense', category: 'Food' },
-  { id: 103, desc: 'Electric Bill', amount: 92.40, date: '2026-07-18', type: 'expense', category: 'Bills' },
-  { id: 104, desc: 'Premium Coffee Maker', amount: 89.99, date: '2026-07-20', type: 'expense', category: 'Shopping' },
-  { id: 105, desc: 'Gym Monthly Membership', amount: 45.00, date: '2026-07-21', type: 'expense', category: 'Other' },
-  { id: 106, desc: 'Gas Station Fuel', amount: 55.00, date: '2026-07-22', type: 'expense', category: 'Transport' },
-  { id: 107, desc: 'Design System Consulting', amount: 1800, date: '2026-07-25', type: 'income', category: 'Salary' },
-  { id: 108, desc: 'Fine Dining Dinner', amount: 142.00, date: '2026-07-26', type: 'expense', category: 'Food' },
-  { id: 109, desc: 'Weekly Supermarket Run', amount: 110.25, date: '2026-07-28', type: 'expense', category: 'Food' },
-  { id: 110, desc: 'Cinema Tickets & Snacks', amount: 34.50, date: '2026-07-29', type: 'expense', category: 'Entertainment' },
-  { id: 111, desc: 'High-speed Fiber Internet', amount: 79.99, date: '2026-08-01', type: 'expense', category: 'Bills' },
-  { id: 112, desc: 'Regular Monthly Salary', amount: 5000, date: '2026-08-01', type: 'income', category: 'Salary' },
-  { id: 113, desc: 'Trendy Shoes Sale', amount: 120.00, date: '2026-08-02', type: 'expense', category: 'Shopping' },
-  { id: 114, desc: 'Uber ride to Office', amount: 18.50, date: '2026-08-04', type: 'expense', category: 'Transport' },
-  { id: 115, desc: 'Coffee Shop with Friends', amount: 15.75, date: '2026-08-05', type: 'expense', category: 'Food' },
-  { id: 116, desc: 'Streaming Subscription', amount: 14.99, date: '2026-08-06', type: 'expense', category: 'Entertainment' },
-  { id: 117, desc: 'Car Maintenance Repair', amount: 280.00, date: '2026-08-08', type: 'expense', category: 'Transport' },
-  { id: 118, desc: 'E-commerce Books', amount: 48.30, date: '2026-08-10', type: 'expense', category: 'Shopping' },
-  { id: 119, desc: 'Software License SaaS', amount: 29.00, date: '2026-08-12', type: 'expense', category: 'Bills' },
-  { id: 120, desc: 'Bistro Lunch Special', amount: 24.50, date: '2026-08-14', type: 'expense', category: 'Food' },
-];
-
 function getDefaultBudgets() {
   return { Food: 300, Transport: 100, Shopping: 200, Bills: 400, Entertainment: 150, Other: 150 };
+}
+
+function hasStartingBalance() {
+  return localStorage.getItem(scopedKey(BALANCE_STORAGE_KEY_BASE)) !== null;
+}
+
+function loadStartingBalance() {
+  const stored = localStorage.getItem(scopedKey(BALANCE_STORAGE_KEY_BASE));
+  startingBalance = stored ? parseFloat(stored) : 0;
+}
+
+function saveStartingBalance(amount) {
+  startingBalance = amount;
+  localStorage.setItem(scopedKey(BALANCE_STORAGE_KEY_BASE), String(amount));
 }
 
 function loadTransactions() {
   const stored = localStorage.getItem(scopedKey(STORAGE_KEY_BASE));
   transactions = stored ? JSON.parse(stored) : [];
+  loadStartingBalance();
 
   const storedBudgets = localStorage.getItem(scopedKey(BUDGET_STORAGE_KEY_BASE));
   if (storedBudgets) {
@@ -148,7 +142,7 @@ function updateSummary(data) {
     return acc;
   }, { income: 0, expense: 0 });
 
-  const netBalance = totals.income - totals.expense;
+  const netBalance = startingBalance + totals.income - totals.expense;
   document.getElementById('total-balance').textContent  = fmt(netBalance);
   document.getElementById('total-income').textContent   = fmt(totals.income);
   document.getElementById('total-expense').textContent  = fmt(totals.expense);
@@ -472,16 +466,6 @@ function openBudgetModal() {
   });
 }
 
-const demoDataBtn = document.getElementById('demo-data-btn');
-if (demoDataBtn) {
-  demoDataBtn.addEventListener('click', () => {
-    transactions = [...DEMO_TRANSACTIONS];
-    saveTransactions();
-    refreshAll();
-    showToast('Demo Data Loaded', 'Beautiful multi-month transactions have been loaded successfully!', 'success');
-  });
-}
-
 const exportCsvBtn = document.getElementById('export-csv-btn');
 if (exportCsvBtn) {
   exportCsvBtn.addEventListener('click', () => {
@@ -696,7 +680,7 @@ function renderLineChart() {
   }
 
   const sorted = [...transactions].sort((a, b) => new Date(a.date) - new Date(b.date));
-  let running = 0;
+  let running = startingBalance;
   const points = [];
 
   sorted.forEach(tx => {
@@ -844,13 +828,16 @@ function refreshAll() {
 const ACCOUNTS_KEY = 'finTrack_v2_accounts';
 const USER_KEY      = 'finTrack_v2_user';
 
-const loginScreen = document.getElementById('login-screen');
-const signinForm  = document.getElementById('signin-form');
-const signupForm  = document.getElementById('signup-form');
-const logoutBtn   = document.getElementById('logout-btn');
-const authTabs    = document.querySelectorAll('.auth-tab');
+const loginScreen  = document.getElementById('login-screen');
+const onboardScreen = document.getElementById('onboard-screen');
+const onboardForm  = document.getElementById('onboard-form');
+const signinForm   = document.getElementById('signin-form');
+const signupForm   = document.getElementById('signup-form');
+const logoutBtn    = document.getElementById('logout-btn');
+const authTabs     = document.querySelectorAll('.auth-tab');
 const authSwitches = document.querySelectorAll('.auth-switch');
-const authPanels  = document.querySelectorAll('.auth-panel');
+const authPanels   = document.querySelectorAll('.auth-panel');
+let pendingUser = null;
 
 function getAccounts() {
   const raw = localStorage.getItem(ACCOUNTS_KEY);
@@ -891,7 +878,32 @@ function showApp(user) {
 function showLogin() {
   document.body.classList.remove('authed');
   loginScreen.classList.remove('hidden');
+  onboardScreen.classList.add('hidden');
 }
+
+function enterApp(user) {
+  currentUserEmail = user && user.email ? user.email.toLowerCase() : null;
+  if (hasStartingBalance()) {
+    showApp(user);
+    init();
+  } else {
+    pendingUser = user;
+    loginScreen.classList.add('hidden');
+    onboardScreen.classList.remove('hidden');
+  }
+}
+
+onboardForm.addEventListener('submit', (e) => {
+  e.preventDefault();
+  document.getElementById('error-onboard-balance').textContent = '';
+  const input = document.getElementById('onboard-balance');
+  const amount = parseFloat(input.value);
+  saveStartingBalance(isNaN(amount) || amount < 0 ? 0 : amount);
+  onboardScreen.classList.add('hidden');
+  showApp(pendingUser);
+  init();
+  pendingUser = null;
+});
 
 signupForm.addEventListener('submit', (e) => {
   e.preventDefault();
@@ -922,8 +934,7 @@ signupForm.addEventListener('submit', (e) => {
 
   const user = { name, email };
   localStorage.setItem(USER_KEY, JSON.stringify(user));
-  showApp(user);
-  init();
+  enterApp(user);
 });
 
 signinForm.addEventListener('submit', (e) => {
@@ -951,15 +962,16 @@ signinForm.addEventListener('submit', (e) => {
 
   const user = { name: account.name, email: account.email };
   localStorage.setItem(USER_KEY, JSON.stringify(user));
-  showApp(user);
-  init();
+  enterApp(user);
 });
 
 logoutBtn.addEventListener('click', () => {
   localStorage.removeItem(USER_KEY);
   currentUserEmail = null;
+  pendingUser = null;
   signinForm.reset();
   signupForm.reset();
+  onboardForm.reset();
   switchAuthTab('signin');
   showLogin();
 });
@@ -976,8 +988,7 @@ function init() {
 
 const existingUser = getUser();
 if (existingUser) {
-  showApp(existingUser);
-  init();
+  enterApp(existingUser);
 } else {
   showLogin();
 }
