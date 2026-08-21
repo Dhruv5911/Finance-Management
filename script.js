@@ -128,7 +128,7 @@ themeToggle.addEventListener('click', () => {
 });
 
 function fmt(amount) {
-  return '$' + Math.abs(amount).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  return '₹' + Math.abs(amount).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 }
 
 function fmtDate(dateStr) {
@@ -431,7 +431,7 @@ function openBudgetModal() {
         <select id="budget-cat" class="form-control">${optionsHTML}</select>
       </div>
       <div class="form-group">
-        <label for="budget-limit">Limit Amount ($)</label>
+        <label for="budget-limit">Limit Amount (₹)</label>
         <input type="number" id="budget-limit" class="form-control" placeholder="300" min="0" step="10">
         <span class="error-msg" id="error-budget-limit"></span>
       </div>
@@ -460,7 +460,7 @@ function openBudgetModal() {
     }
     budgets[cat] = limit;
     localStorage.setItem(scopedKey(BUDGET_STORAGE_KEY_BASE), JSON.stringify(budgets));
-    showToast('Success', `Budget for ${cat} set to $${limit.toFixed(2)}`, 'success');
+    showToast('Success', `Budget for ${cat} set to ₹${limit.toFixed(2)}`, 'success');
     closeModal();
     renderBudgets();
   });
@@ -555,6 +555,8 @@ async function convertCurrency() {
       code: c, rate: data.rates[c]
     }));
     const flags = { EUR:'🇪🇺',GBP:'🇬🇧',JPY:'🇯🇵',AUD:'🇦🇺',CAD:'🇨🇦',INR:'🇮🇳',CNY:'🇨🇳',CHF:'🇨🇭',USD:'🇺🇸' };
+    const ratesTitle = document.getElementById('rates-title');
+    if (ratesTitle) ratesTitle.textContent = `Popular Rates (vs ${from})`;
     ratesList.innerHTML = popularRates.map(r => `
       <div class="rate-row">
         <span class="rate-currency">${flags[r.code] || ''} ${r.code}</span>
@@ -649,7 +651,7 @@ function renderBudgets() {
         <div class="budget-meta">
           <span class="budget-cat">${CATEGORY_ICONS[cat] || ''} ${cat}</span>
           <span class="budget-amounts ${warningClass}">
-            <strong>$${spent.toFixed(0)}</strong> / $${limit}
+            <strong>₹${spent.toFixed(0)}</strong> / ₹${limit}
           </span>
         </div>
         <div class="budget-bar-track">
@@ -848,11 +850,6 @@ function saveAccounts(accounts) {
   localStorage.setItem(ACCOUNTS_KEY, JSON.stringify(accounts));
 }
 
-function getUser() {
-  const raw = localStorage.getItem(USER_KEY);
-  return raw ? JSON.parse(raw) : null;
-}
-
 function switchAuthTab(tab) {
   authTabs.forEach(t => t.classList.toggle('active', t.dataset.tab === tab));
   authPanels.forEach(p => p.classList.toggle('active', p.id === `panel-${tab}`));
@@ -986,9 +983,5 @@ function init() {
   navigateTo('dashboard');
 }
 
-const existingUser = getUser();
-if (existingUser) {
-  enterApp(existingUser);
-} else {
-  showLogin();
-}
+localStorage.removeItem(USER_KEY);
+showLogin();

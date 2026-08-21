@@ -93,13 +93,13 @@
 
       <form id="onboard-form" novalidate>
         <div class="form-group">
-          <label for="onboard-balance">Starting Balance ($)</label>
+          <label for="onboard-balance">Starting Balance (₹)</label>
           <input type="number" id="onboard-balance" class="form-control" placeholder="0.00" step="0.01" min="0" autofocus>
           <span class="error-msg" id="error-onboard-balance"></span>
         </div>
         <button type="submit" class="btn-submit">Continue to Dashboard</button>
       </form>
-      <p class="login-hint">You can start at $0 and add income later if you'd rather.</p>
+      <p class="login-hint">You can start at ₹0 and add income later if you'd rather.</p>
     </div>
   </div>
 
@@ -172,7 +172,7 @@
             <div class="kpi-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2"/></svg></div>
             <div class="kpi-body">
               <p class="kpi-label">Net Balance</p>
-              <h2 class="kpi-value" id="total-balance">$0.00</h2>
+              <h2 class="kpi-value" id="total-balance">₹0.00</h2>
             </div>
             <div class="kpi-trend" id="balance-trend"></div>
           </div>
@@ -180,14 +180,14 @@
             <div class="kpi-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg></div>
             <div class="kpi-body">
               <p class="kpi-label">Total Income</p>
-              <h2 class="kpi-value" id="total-income">$0.00</h2>
+              <h2 class="kpi-value" id="total-income">₹0.00</h2>
             </div>
           </div>
           <div class="kpi-card kpi-expense">
             <div class="kpi-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 18 13.5 8.5 8.5 13.5 1 6"/><polyline points="17 18 23 18 23 12"/></svg></div>
             <div class="kpi-body">
               <p class="kpi-label">Total Expenses</p>
-              <h2 class="kpi-value" id="total-expense">$0.00</h2>
+              <h2 class="kpi-value" id="total-expense">₹0.00</h2>
             </div>
           </div>
           <div class="kpi-card kpi-count">
@@ -251,7 +251,7 @@
                 </div>
                 <div class="vcard-middle">
                   <div class="vcard-balance-label">CARD BALANCE</div>
-                  <div class="vcard-balance" id="card-balance-val">$0.00</div>
+                  <div class="vcard-balance" id="card-balance-val">₹0.00</div>
                 </div>
                 <div class="vcard-bottom">
                   <div class="vcard-number">•••• •••• •••• 8824</div>
@@ -289,7 +289,7 @@
                 </div>
                 <div class="form-row">
                   <div class="form-group">
-                    <label for="amount">Amount ($)</label>
+                    <label for="amount">Amount (₹)</label>
                     <input type="number" id="amount" class="form-control" placeholder="0.00" step="0.01">
                     <span class="error-msg" id="error-amount"></span>
                   </div>
@@ -416,17 +416,17 @@
                 <div class="stat-row">
                   <span class="dot dot-green"></span>
                   <span>Income</span>
-                  <strong id="ana-income">$0.00</strong>
+                  <strong id="ana-income">₹0.00</strong>
                 </div>
                 <div class="stat-row">
                   <span class="dot dot-red"></span>
                   <span>Expenses</span>
-                  <strong id="ana-expense">$0.00</strong>
+                  <strong id="ana-expense">₹0.00</strong>
                 </div>
                 <div class="stat-row">
                   <span class="dot dot-blue"></span>
                   <span>Savings</span>
-                  <strong id="ana-savings">$0.00</strong>
+                  <strong id="ana-savings">₹0.00</strong>
                 </div>
               </div>
             </div>
@@ -479,7 +479,7 @@
                     <option value="JPY">🇯🇵 JPY</option>
                     <option value="AUD">🇦🇺 AUD</option>
                     <option value="CAD">🇨🇦 CAD</option>
-                    <option value="INR">🇮🇳 INR</option>
+                    <option value="INR" selected>🇮🇳 INR</option>
                     <option value="CNY">🇨🇳 CNY</option>
                     <option value="CHF">🇨🇭 CHF</option>
                   </select>
@@ -490,8 +490,8 @@
                 <div class="form-group">
                   <label for="conv-to">To</label>
                   <select id="conv-to" class="form-control">
-                    <option value="USD">🇺🇸 USD</option>
-                    <option value="EUR" selected>🇪🇺 EUR</option>
+                    <option value="USD" selected>🇺🇸 USD</option>
+                    <option value="EUR">🇪🇺 EUR</option>
                     <option value="GBP">🇬🇧 GBP</option>
                     <option value="JPY">🇯🇵 JPY</option>
                     <option value="AUD">🇦🇺 AUD</option>
@@ -515,7 +515,7 @@
           </section>
 
           <section class="glass-card rates-card">
-            <div class="card-head"><h3>Popular Rates (vs USD)</h3></div>
+            <div class="card-head"><h3 id="rates-title">Popular Rates (vs INR)</h3></div>
             <div class="rates-body" id="rates-list">
               <div class="empty-state">Click Convert to load rates.</div>
             </div>
