@@ -15,6 +15,43 @@
 <body>
 
   <div class="login-screen" id="login-screen">
+    <div class="login-illustration">
+      <svg viewBox="0 0 420 420" class="login-illustration-svg">
+        <defs>
+          <linearGradient id="illoGrad1" x1="0" y1="0" x2="1" y2="1">
+            <stop offset="0%" stop-color="#e2c583"/>
+            <stop offset="100%" stop-color="#97753a"/>
+          </linearGradient>
+          <linearGradient id="illoGrad2" x1="0" y1="1" x2="1" y2="0">
+            <stop offset="0%" stop-color="#3ecf8e" stop-opacity="0.35"/>
+            <stop offset="100%" stop-color="#3ecf8e" stop-opacity="0"/>
+          </linearGradient>
+        </defs>
+        <circle cx="210" cy="210" r="170" fill="none" stroke="rgba(226,197,131,0.15)" stroke-width="1" class="illo-ring illo-ring-1"/>
+        <circle cx="210" cy="210" r="130" fill="none" stroke="rgba(226,197,131,0.12)" stroke-width="1" class="illo-ring illo-ring-2"/>
+        <path d="M60 300 L130 250 L190 275 L250 190 L320 150" fill="none" stroke="url(#illoGrad1)" stroke-width="4" stroke-linecap="round" stroke-linejoin="round" class="illo-trendline"/>
+        <path d="M60 300 L130 250 L190 275 L250 190 L320 150 L320 320 L60 320 Z" fill="url(#illoGrad2)" opacity="0.6"/>
+        <circle cx="320" cy="150" r="7" fill="#e2c583" class="illo-dot illo-dot-1"/>
+        <circle cx="250" cy="190" r="7" fill="#e2c583" class="illo-dot illo-dot-2"/>
+        <circle cx="130" cy="250" r="7" fill="#e2c583" class="illo-dot illo-dot-3"/>
+        <g class="illo-coin illo-coin-1">
+          <circle cx="95" cy="120" r="26" fill="none" stroke="#e2c583" stroke-width="2.5"/>
+          <text x="95" y="128" text-anchor="middle" fill="#e2c583" font-size="22" font-family="Georgia, serif">₹</text>
+        </g>
+        <g class="illo-coin illo-coin-2">
+          <circle cx="330" cy="270" r="20" fill="none" stroke="#3ecf8e" stroke-width="2.5"/>
+          <text x="330" y="277" text-anchor="middle" fill="#3ecf8e" font-size="18" font-family="Georgia, serif">₹</text>
+        </g>
+        <g class="illo-card">
+          <rect x="150" y="55" width="120" height="76" rx="10" fill="#14151d" stroke="rgba(226,197,131,0.35)" stroke-width="1.5"/>
+          <rect x="164" y="72" width="34" height="22" rx="4" fill="url(#illoGrad1)" opacity="0.9"/>
+          <rect x="164" y="104" width="60" height="6" rx="3" fill="rgba(242,234,217,0.4)"/>
+          <rect x="164" y="114" width="40" height="6" rx="3" fill="rgba(242,234,217,0.25)"/>
+        </g>
+      </svg>
+      <h2 class="login-illustration-title">Know exactly where your money goes.</h2>
+      <p class="login-illustration-sub">Track income, control spending, and watch your savings grow — all in one place.</p>
+    </div>
     <div class="login-card">
       <div class="login-brand">
         <div class="brand-icon">

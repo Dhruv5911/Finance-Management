@@ -127,6 +127,21 @@ themeToggle.addEventListener('click', () => {
   applyTheme(isLight ? 'dark' : 'light');
 });
 
+function emptyStateHTML(title, sub) {
+  return `
+    <div class="empty-state-rich">
+      <svg width="72" height="72" viewBox="0 0 72 72" fill="none">
+        <circle cx="36" cy="36" r="35" stroke="var(--card-border)" stroke-width="1.5"/>
+        <rect x="20" y="28" width="32" height="22" rx="4" stroke="var(--accent2)" stroke-width="2" fill="none"/>
+        <path d="M20 34h32" stroke="var(--accent2)" stroke-width="2"/>
+        <circle cx="28" cy="42" r="2" fill="var(--accent2)"/>
+        <path d="M36 20v-4M30 22l-3-4M42 22l3-4" stroke="var(--card-border)" stroke-width="2" stroke-linecap="round"/>
+      </svg>
+      <p class="empty-state-title">${title}</p>
+      ${sub ? `<p class="empty-state-sub">${sub}</p>` : ''}
+    </div>`;
+}
+
 function fmt(amount) {
   return '₹' + Math.abs(amount).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 }
@@ -136,6 +151,22 @@ function fmtDate(dateStr) {
   return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
 }
 
+function animateNumber(el, targetValue, formatter) {
+  if (!el) return;
+  const duration = 700;
+  const start = performance.now();
+  const from = 0;
+  function tick(now) {
+    const progress = Math.min((now - start) / duration, 1);
+    const eased = 1 - Math.pow(1 - progress, 3);
+    const current = from + (targetValue - from) * eased;
+    el.textContent = formatter(current);
+    if (progress < 1) requestAnimationFrame(tick);
+    else el.textContent = formatter(targetValue);
+  }
+  requestAnimationFrame(tick);
+}
+
 function updateSummary(data) {
   const totals = data.reduce((acc, tx) => {
     acc[tx.type] += tx.amount;
@@ -143,14 +174,14 @@ function updateSummary(data) {
   }, { income: 0, expense: 0 });
 
   const netBalance = startingBalance + totals.income - totals.expense;
-  document.getElementById('total-balance').textContent  = fmt(netBalance);
-  document.getElementById('total-income').textContent   = fmt(totals.income);
-  document.getElementById('total-expense').textContent  = fmt(totals.expense);
-  document.getElementById('transaction-count').textContent = data.length;
+  animateNumber(document.getElementById('total-balance'), netBalance, fmt);
+  animateNumber(document.getElementById('total-income'), totals.income, fmt);
+  animateNumber(document.getElementById('total-expense'), totals.expense, fmt);
+  animateNumber(document.getElementById('transaction-count'), data.length, v => Math.round(v));
 
   const cardBalVal = document.getElementById('card-balance-val');
   if (cardBalVal) {
-    cardBalVal.textContent = fmt(netBalance);
+    animateNumber(cardBalVal, netBalance, fmt);
   }
 
   renderBalanceTrend(data);
@@ -219,7 +250,7 @@ function renderRecent() {
     .slice(0, 5);
 
   if (!recent.length) {
-    recentList.innerHTML = '<div class="empty-state">No transactions yet. Add one!</div>';
+    recentList.innerHTML = emptyStateHTML('No transactions yet', 'Add your first income or expense to see it here.');
   } else {
     recentList.innerHTML = recent.map(tx => txHTML(tx, true)).join('');
   }
@@ -249,7 +280,7 @@ function getFiltered() {
 function renderFullList() {
   const data = getFiltered();
   if (!data.length) {
-    fullList.innerHTML = '<div class="empty-state">No transactions match your filters.</div>';
+    fullList.innerHTML = emptyStateHTML('No matching transactions', 'Try adjusting your filters or search.');
   } else {
     fullList.innerHTML = data.map(tx => txHTML(tx, false)).join('');
   }
