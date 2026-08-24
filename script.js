@@ -74,6 +74,7 @@ function loadStartingBalance() {
   }
 }
 
+
 function saveStartingBalance(amount) {
   startingBalance = amount;
   localStorage.setItem(scopedKey(BALANCE_STORAGE_KEY_BASE), String(amount));
