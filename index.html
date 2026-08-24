@@ -125,8 +125,8 @@
         </div>
         <span class="brand-name">Fin<strong>Track</strong></span>
       </div>
-      <h1 class="login-title">What's your starting balance?</h1>
-      <p class="login-sub">Enter how much money you currently have. Your dashboard and analytics will be built on top of this.</p>
+      <h1 class="login-title">Let's set up your budget</h1>
+      <p class="login-sub">Tell us what you're starting with and set a monthly budget for each category. You can change any of this later.</p>
 
       <form id="onboard-form" novalidate>
         <div class="form-group">
@@ -134,9 +134,39 @@
           <input type="number" id="onboard-balance" class="form-control" placeholder="0.00" step="0.01" min="0" autofocus>
           <span class="error-msg" id="error-onboard-balance"></span>
         </div>
+
+        <p class="onboard-section-label">Monthly Budget by Category (₹)</p>
+        <div class="onboard-budget-grid">
+          <div class="form-group">
+            <label for="onboard-budget-Food">🍔 Food</label>
+            <input type="number" id="onboard-budget-Food" class="form-control" placeholder="0" min="0" step="10">
+          </div>
+          <div class="form-group">
+            <label for="onboard-budget-Transport">🚗 Transport</label>
+            <input type="number" id="onboard-budget-Transport" class="form-control" placeholder="0" min="0" step="10">
+          </div>
+          <div class="form-group">
+            <label for="onboard-budget-Shopping">🛍️ Shopping</label>
+            <input type="number" id="onboard-budget-Shopping" class="form-control" placeholder="0" min="0" step="10">
+          </div>
+          <div class="form-group">
+            <label for="onboard-budget-Bills">📄 Bills</label>
+            <input type="number" id="onboard-budget-Bills" class="form-control" placeholder="0" min="0" step="10">
+          </div>
+          <div class="form-group">
+            <label for="onboard-budget-Entertainment">🎬 Entertainment</label>
+            <input type="number" id="onboard-budget-Entertainment" class="form-control" placeholder="0" min="0" step="10">
+          </div>
+          <div class="form-group">
+            <label for="onboard-budget-Other">📦 Other</label>
+            <input type="number" id="onboard-budget-Other" class="form-control" placeholder="0" min="0" step="10">
+          </div>
+        </div>
+        <span class="error-msg" id="error-onboard-budget"></span>
+
         <button type="submit" class="btn-submit">Continue to Dashboard</button>
       </form>
-      <p class="login-hint">You can start at ₹0 and add income later if you'd rather.</p>
+      <p class="login-hint">You can start at ₹0 and adjust your budget anytime from the dashboard.</p>
     </div>
   </div>
 
@@ -170,6 +200,9 @@
     <div class="topbar-title" id="topbar-title">Dashboard</div>
 
     <div class="sidebar-footer">
+      <button class="btn-icon-action" id="change-budget-btn" title="Change Budget">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 1v22M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+      </button>
       <button class="btn-icon-action" id="export-csv-btn" title="Export CSV">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg>
       </button>
@@ -464,6 +497,11 @@
                   <span class="dot dot-blue"></span>
                   <span>Savings</span>
                   <strong id="ana-savings">₹0.00</strong>
+                </div>
+                <div class="stat-row hidden" id="ana-budget-row">
+                  <span class="dot dot-yellow"></span>
+                  <span>Budget Remaining</span>
+                  <strong id="ana-budget-remaining">₹0.00</strong>
                 </div>
               </div>
             </div>
