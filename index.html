@@ -14,7 +14,104 @@
 </head>
 <body>
 
-  <div class="login-screen" id="login-screen">
+  <div class="landing-screen" id="landing-screen">
+    <nav class="landing-nav">
+      <div class="sidebar-brand">
+        <div class="brand-icon">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2z"/><path d="M12 6v6l4 2"/></svg>
+        </div>
+        <span class="brand-name">Fin<strong>Track</strong></span>
+      </div>
+      <div class="landing-nav-actions">
+        <button type="button" class="landing-link-btn" id="landing-login-btn">Log In</button>
+        <button type="button" class="btn-pill btn-add-quick" id="landing-getstarted-btn">Get Started</button>
+      </div>
+    </nav>
+
+    <section class="landing-hero">
+      <div class="landing-hero-text">
+        <span class="landing-eyebrow">Personal Finance, Simplified</span>
+        <h1>Accelerate your <span class="accent-text">financial growth.</span></h1>
+        <p>Track income and expenses, set category budgets, and see exactly where your money goes — all stored privately on your own device.</p>
+        <div class="landing-hero-actions">
+          <button type="button" class="btn-pill btn-add-quick landing-hero-cta" id="landing-hero-getstarted">
+            Get Started Free
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+          </button>
+          <button type="button" class="landing-link-btn landing-hero-login" id="landing-hero-login">Already have an account? Log in</button>
+        </div>
+        <div class="landing-stats">
+          <div><strong>100%</strong><span>Private &amp; local</span></div>
+          <div><strong>₹0</strong><span>Cost to use</span></div>
+          <div><strong>6</strong><span>Budget categories</span></div>
+        </div>
+      </div>
+
+      <div class="landing-hero-visual">
+        <div class="vcard landing-vcard">
+          <div class="vcard-gloss"></div>
+          <div class="vcard-top">
+            <div class="vcard-logo">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" class="vcard-icon"><rect x="2" y="5" width="20" height="14" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/></svg>
+              <span>FinTrack <strong>Platinum</strong></span>
+            </div>
+          </div>
+          <div class="vcard-middle">
+            <div class="vcard-balance-label">TOTAL BALANCE</div>
+            <div class="vcard-balance">₹84,635.00</div>
+          </div>
+          <div class="vcard-bottom">
+            <div class="vcard-number">•••• •••• •••• 8824</div>
+          </div>
+        </div>
+        <div class="landing-float-card landing-float-1">
+          <span>↑ Income</span>
+          <strong>₹10,000</strong>
+        </div>
+        <div class="landing-float-card landing-float-2">
+          <span>↓ Food</span>
+          <strong>₹1,240</strong>
+        </div>
+      </div>
+    </section>
+
+    <section class="landing-features">
+      <div class="landing-feature-card">
+        <div class="landing-feature-icon">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+        </div>
+        <h3>Real Analytics</h3>
+        <p>See spending by category, savings rate, and balance trend over time.</p>
+      </div>
+      <div class="landing-feature-card">
+        <div class="landing-feature-icon">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 1v22M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+        </div>
+        <h3>Category Budgets</h3>
+        <p>Set a monthly budget for Food, Transport, Bills and more, per category.</p>
+      </div>
+      <div class="landing-feature-card">
+        <div class="landing-feature-icon">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="1" y="4" width="22" height="16" rx="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg>
+        </div>
+        <h3>Live Currency Rates</h3>
+        <p>Convert between currencies using real, live exchange rates.</p>
+      </div>
+      <div class="landing-feature-card">
+        <div class="landing-feature-icon">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+        </div>
+        <h3>Stays On Your Device</h3>
+        <p>No server, no tracking — everything is saved locally in your browser.</p>
+      </div>
+    </section>
+
+    <footer class="landing-footer">
+      <span>FinTrack — a personal finance demo project.</span>
+    </footer>
+  </div>
+
+  <div class="login-screen hidden" id="login-screen">
     <div class="login-illustration">
       <svg viewBox="0 0 420 420" class="login-illustration-svg">
         <defs>
@@ -53,6 +150,10 @@
       <p class="login-illustration-sub">Track income, control spending, and watch your savings grow — all in one place.</p>
     </div>
     <div class="login-card">
+      <button type="button" class="login-back-link" id="login-back-btn">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>
+        Back to home
+      </button>
       <div class="login-brand">
         <div class="brand-icon">
           <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2z"/><path d="M12 6v6l4 2"/></svg>
@@ -68,6 +169,12 @@
       <div class="auth-panel active" id="panel-signin">
         <h1 class="login-title">Welcome back</h1>
         <p class="login-sub">Sign in to see your finances. Everything stays on this device — nothing is sent anywhere.</p>
+
+        <button type="button" class="btn-google" id="google-signin-btn">
+          <svg width="18" height="18" viewBox="0 0 18 18"><path fill="#4285F4" d="M17.64 9.2c0-.64-.06-1.25-.16-1.84H9v3.48h4.84a4.14 4.14 0 0 1-1.8 2.72v2.26h2.9c1.7-1.57 2.68-3.87 2.68-6.62z"/><path fill="#34A853" d="M9 18c2.43 0 4.47-.8 5.96-2.18l-2.9-2.26c-.8.54-1.84.86-3.06.86-2.35 0-4.34-1.59-5.05-3.72H.96v2.33A9 9 0 0 0 9 18z"/><path fill="#FBBC05" d="M3.95 10.7A5.4 5.4 0 0 1 3.67 9c0-.59.1-1.17.28-1.7V4.97H.96A9 9 0 0 0 0 9c0 1.45.35 2.83.96 4.03l2.99-2.33z"/><path fill="#EA4335" d="M9 3.58c1.32 0 2.51.46 3.44 1.35l2.58-2.58C13.46.89 11.43 0 9 0A9 9 0 0 0 .96 4.97l2.99 2.33C4.66 5.17 6.65 3.58 9 3.58z"/></svg>
+          Continue with Google
+        </button>
+        <div class="auth-divider"><span>or</span></div>
 
         <form id="signin-form" novalidate>
           <div class="form-group">
@@ -88,6 +195,12 @@
       <div class="auth-panel" id="panel-signup">
         <h1 class="login-title">Create your account</h1>
         <p class="login-sub">Takes a few seconds. Your data is stored locally on this device only.</p>
+
+        <button type="button" class="btn-google" id="google-signup-btn">
+          <svg width="18" height="18" viewBox="0 0 18 18"><path fill="#4285F4" d="M17.64 9.2c0-.64-.06-1.25-.16-1.84H9v3.48h4.84a4.14 4.14 0 0 1-1.8 2.72v2.26h2.9c1.7-1.57 2.68-3.87 2.68-6.62z"/><path fill="#34A853" d="M9 18c2.43 0 4.47-.8 5.96-2.18l-2.9-2.26c-.8.54-1.84.86-3.06.86-2.35 0-4.34-1.59-5.05-3.72H.96v2.33A9 9 0 0 0 9 18z"/><path fill="#FBBC05" d="M3.95 10.7A5.4 5.4 0 0 1 3.67 9c0-.59.1-1.17.28-1.7V4.97H.96A9 9 0 0 0 0 9c0 1.45.35 2.83.96 4.03l2.99-2.33z"/><path fill="#EA4335" d="M9 3.58c1.32 0 2.51.46 3.44 1.35l2.58-2.58C13.46.89 11.43 0 9 0A9 9 0 0 0 .96 4.97l2.99 2.33C4.66 5.17 6.65 3.58 9 3.58z"/></svg>
+          Continue with Google
+        </button>
+        <div class="auth-divider"><span>or</span></div>
 
         <form id="signup-form" novalidate>
           <div class="form-group">
@@ -617,5 +730,7 @@
   <div id="toast-container" class="toast-container"></div>
 
   <script src="script.js"></script>
+  <script src="landing.js"></script>
+  <script src="google-auth.js"></script>
 </body>
 </html>

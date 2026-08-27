@@ -972,6 +972,7 @@ function refreshAll() {
 const ACCOUNTS_KEY = 'finTrack_v2_accounts';
 const USER_KEY      = 'finTrack_v2_user';
 
+const landingScreen = document.getElementById('landing-screen');
 const loginScreen  = document.getElementById('login-screen');
 const onboardScreen = document.getElementById('onboard-screen');
 const onboardForm  = document.getElementById('onboard-form');
@@ -1006,6 +1007,7 @@ authSwitches.forEach(a => a.addEventListener('click', (e) => {
 function showApp(user) {
   currentUserEmail = user && user.email ? user.email.toLowerCase() : null;
   document.body.classList.add('authed');
+  landingScreen.classList.add('hidden');
   loginScreen.classList.add('hidden');
   const greetEl = document.querySelector('.page-heading h1');
   if (greetEl && user && user.name) {
@@ -1014,8 +1016,16 @@ function showApp(user) {
   }
 }
 
+function showLanding() {
+  document.body.classList.remove('authed');
+  landingScreen.classList.remove('hidden');
+  loginScreen.classList.add('hidden');
+  onboardScreen.classList.add('hidden');
+}
+
 function showLogin() {
   document.body.classList.remove('authed');
+  landingScreen.classList.add('hidden');
   loginScreen.classList.remove('hidden');
   onboardScreen.classList.add('hidden');
 }
@@ -1027,6 +1037,7 @@ function enterApp(user) {
     init();
   } else {
     pendingUser = user;
+    landingScreen.classList.add('hidden');
     loginScreen.classList.add('hidden');
     onboardScreen.classList.remove('hidden');
   }
@@ -1140,7 +1151,7 @@ logoutBtn.addEventListener('click', () => {
   signupForm.reset();
   onboardForm.reset();
   switchAuthTab('signin');
-  showLogin();
+  showLanding();
 });
 
 function init() {
@@ -1154,4 +1165,4 @@ function init() {
 }
 
 localStorage.removeItem(USER_KEY);
-showLogin();
+showLanding();
