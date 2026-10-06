@@ -1,0 +1,776 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>FinAI — Personal Finance & Intelligent AI Assistant</title>
+  <meta name="description" content="Personal finance management with AI-powered analytics, deterministic calculations, and instant insights.">
+
+  <!-- Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;600&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
+
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+
+  <!-- ================================================================
+       1. LANDING SCREEN
+       ================================================================ -->
+  <div class="landing-screen" id="landing-screen">
+    <nav class="landing-nav">
+      <div class="sidebar-brand">
+        <div class="brand-icon">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2z"/><path d="M12 6v6l4 2"/></svg>
+        </div>
+        <span class="brand-name">Fin<em>AI</em></span>
+      </div>
+      <div class="landing-nav-actions">
+        <button type="button" class="landing-link-btn" id="landing-login-btn">Log In</button>
+        <button type="button" class="btn-pill btn-sm" id="landing-direct-app-btn">Launch App Directly →</button>
+      </div>
+    </nav>
+
+    <section class="landing-hero">
+      <div class="landing-hero-text">
+        <span class="landing-eyebrow">Smart Personal Finance & AI</span>
+        <h1>Accelerate your <span class="accent-text">financial clarity.</span></h1>
+        <p>Track income and expenses, set monthly category budgets, monitor trends, and converse with an intelligent AI assistant grounded in your real financial data.</p>
+        <div class="landing-hero-actions">
+          <button type="button" class="btn-pill landing-hero-cta" id="landing-hero-getstarted">
+            Get Started Free
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+          </button>
+          <button type="button" class="landing-link-btn landing-hero-login" id="landing-hero-direct">Skip login & launch dashboard</button>
+        </div>
+        <div class="landing-stats">
+          <div><strong>100%</strong><span>Grounded data</span></div>
+          <div><strong>₹0</strong><span>Free & private</span></div>
+          <div><strong>AI</strong><span>Gemini + Local RAG</span></div>
+        </div>
+      </div>
+
+      <div class="landing-hero-visual">
+        <div class="vcard landing-vcard">
+          <div class="vcard-gloss"></div>
+          <div class="vcard-top">
+            <div class="vcard-logo">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" class="vcard-icon"><rect x="2" y="5" width="20" height="14" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/></svg>
+              <span>FinAI <strong>Platinum</strong></span>
+            </div>
+            <span class="vcard-chip-sim"></span>
+          </div>
+          <div class="vcard-middle">
+            <div class="vcard-balance-label">TOTAL BALANCE</div>
+            <div class="vcard-balance" id="landing-hero-balance">₹84,635.00</div>
+          </div>
+          <div class="vcard-bottom">
+            <div class="vcard-number">•••• •••• •••• 8824</div>
+            <div class="vcard-exp">EXP 12/29</div>
+          </div>
+        </div>
+        <div class="landing-float-card landing-float-1">
+          <span>↑ Monthly Income</span>
+          <strong>₹50,000</strong>
+        </div>
+        <div class="landing-float-card landing-float-2">
+          <span>↓ Savings Rate</span>
+          <strong>24.5%</strong>
+        </div>
+      </div>
+    </section>
+
+    <section class="landing-features">
+      <div class="landing-feature-card">
+        <div class="landing-feature-icon">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+        </div>
+        <h3>Real Analytics</h3>
+        <p>See spending by category, savings rate, and monthly balance trends in interactive charts.</p>
+      </div>
+      <div class="landing-feature-card">
+        <div class="landing-feature-icon">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+        </div>
+        <h3>FinAI Assistant</h3>
+        <p>Ask anything about your finances in plain language. Strictly grounded with deterministic Python tools.</p>
+      </div>
+      <div class="landing-feature-card">
+        <div class="landing-feature-icon">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 1v22M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+        </div>
+        <h3>Budget & Goal Planners</h3>
+        <p>Set targets for Food, Transport, Bills, and calculate exactly what it takes to hit your savings milestones.</p>
+      </div>
+      <div class="landing-feature-card">
+        <div class="landing-feature-icon">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="1" y="4" width="22" height="16" rx="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg>
+        </div>
+        <h3>Calculators & Converter</h3>
+        <p>Reducing-balance EMI calculator, SIP compound growth calculator, and live currency converter.</p>
+      </div>
+    </section>
+
+    <footer class="landing-footer">
+      <span>FinAI — Intelligent Personal Finance Assistant with deterministic analytics.</span>
+    </footer>
+  </div>
+
+
+  <!-- ================================================================
+       2. LOGIN & SIGNUP SCREEN
+       ================================================================ -->
+  <div class="login-screen hidden" id="login-screen">
+    <div class="login-illustration">
+      <div class="login-illo-content">
+        <div class="login-illo-card">
+          <div class="login-illo-icon">₹</div>
+          <div class="login-illo-label">FinAI Personal Finance</div>
+          <div class="login-illo-sub">Grounded AI & deterministic intelligence</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="login-form-side">
+      <!-- Sign In Form -->
+      <div class="login-form-wrap" id="login-form-wrap">
+        <div class="login-brand">
+          <div class="brand-icon small"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2z"/><path d="M12 6v6l4 2"/></svg></div>
+          <span class="brand-name">Fin<em>AI</em></span>
+        </div>
+        <h2>Welcome back</h2>
+        <p class="login-sub">Sign in to your account</p>
+        <div id="login-error" class="auth-error hidden"></div>
+        <div class="form-group">
+          <label>Email</label>
+          <input type="email" id="login-email" placeholder="you@example.com" autocomplete="email">
+        </div>
+        <div class="form-group">
+          <label>Password</label>
+          <input type="password" id="login-password" placeholder="Your password" autocomplete="current-password">
+        </div>
+        <button class="btn-pill btn-full" id="login-submit-btn">Sign In</button>
+        <button class="btn-ghost btn-full mt-2" id="login-guest-btn">Continue as Guest (No Login)</button>
+        <p class="auth-switch">Don't have an account? <a href="#" id="go-to-signup">Sign up</a></p>
+        <button class="landing-link-btn back-btn" id="login-back-btn">← Back to home</button>
+      </div>
+
+      <!-- Sign Up Form -->
+      <div class="login-form-wrap hidden" id="signup-form-wrap">
+        <div class="login-brand">
+          <div class="brand-icon small"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2z"/><path d="M12 6v6l4 2"/></svg></div>
+          <span class="brand-name">Fin<em>AI</em></span>
+        </div>
+        <h2>Create account</h2>
+        <p class="login-sub">Start managing your personal finances</p>
+        <div id="signup-error" class="auth-error hidden"></div>
+        <div class="form-group">
+          <label>Name</label>
+          <input type="text" id="signup-name" placeholder="Your name">
+        </div>
+        <div class="form-group">
+          <label>Email</label>
+          <input type="email" id="signup-email" placeholder="you@example.com">
+        </div>
+        <div class="form-group">
+          <label>Password</label>
+          <input type="password" id="signup-password" placeholder="Choose a password (min. 6 characters)">
+        </div>
+        <button class="btn-pill btn-full" id="signup-submit-btn">Create Account</button>
+        <button class="btn-ghost btn-full mt-2" id="signup-guest-btn">Continue as Guest (No Login)</button>
+        <p class="auth-switch">Already have an account? <a href="#" id="go-to-login">Sign in</a></p>
+        <button class="landing-link-btn back-btn" id="signup-back-btn">← Back to home</button>
+      </div>
+    </div>
+  </div>
+
+
+  <!-- ================================================================
+       3. MAIN APPLICATION INTERFACE
+       ================================================================ -->
+  <div class="app-screen hidden" id="app-screen">
+
+    <!-- ===== TOP BAR ===== -->
+    <header class="topbar">
+      <div class="topbar-inner">
+        <div class="topbar-left">
+          <button class="nav-toggle-btn" id="toggleDashboard" title="Toggle sidebar" aria-label="Toggle sidebar">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+          </button>
+          <div class="brand" id="brand-home-link" style="cursor:pointer;" title="FinAI Dashboard">
+            <span class="brand-mark">Fin<em>AI</em></span>
+            <span class="brand-sub">Intelligent Personal Finance Assistant</span>
+          </div>
+        </div>
+        <div class="topbar-right">
+          <div class="data-source" id="dataSourceBadge">Loading data…</div>
+          <div class="ai-status" id="aiStatusBadge" title="AI model connection status"><span class="status-dot"></span><span class="status-text">Checking…</span></div>
+          <button class="btn-pill btn-sm" id="topbar-add-quick-btn">+ Add Transaction</button>
+        </div>
+      </div>
+    </header>
+
+    <!-- ===== APP SHELL ===== -->
+    <div class="app-shell">
+
+      <!-- ----- SIDEBAR ----- -->
+      <aside class="sidebar" id="sidebar">
+        <!-- User Badge -->
+        <div class="sidebar-user" id="sidebar-user">
+          <div class="sidebar-avatar" id="sidebar-avatar">U</div>
+          <div class="sidebar-user-info">
+            <div class="sidebar-user-name" id="sidebar-user-name">Guest User</div>
+            <div class="sidebar-user-email" id="sidebar-user-email">guest@finai.local</div>
+          </div>
+        </div>
+
+        <nav class="sidebar-nav">
+          <div class="nav-section">
+            <span class="nav-section-label">Core Views</span>
+            <button class="nav-item active" data-view="dashboard">
+              <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="9"/><rect x="14" y="3" width="7" height="5"/><rect x="14" y="12" width="7" height="9"/><rect x="3" y="16" width="7" height="5"/></svg>
+              <span>Dashboard</span>
+            </button>
+            <button class="nav-item nav-item-ai" data-view="chat">
+              <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>
+              <span>AI Assistant</span>
+              <span class="nav-badge">Ask</span>
+            </button>
+            <button class="nav-item" data-view="transactions">
+              <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>
+              <span>Transactions</span>
+              <span class="table-count-badge" id="sideCountBadge">0</span>
+            </button>
+            <button class="nav-item" data-view="analytics">
+              <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+              <span>Analytics</span>
+            </button>
+          </div>
+
+          <div class="nav-section">
+            <span class="nav-section-label">Finance Tools</span>
+            <button class="nav-item" data-view="budget">
+              <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="6" width="20" height="13" rx="2"/><path d="M2 10h20"/><path d="M6 15h4"/></svg>
+              <span>Budget Planner</span>
+            </button>
+            <button class="nav-item" data-view="goal">
+              <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="1"/></svg>
+              <span>Savings Goal</span>
+            </button>
+            <button class="nav-item" data-view="loan">
+              <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="19" y1="5" x2="5" y2="19"/><circle cx="6.5" cy="6.5" r="2.5"/><circle cx="17.5" cy="17.5" r="2.5"/></svg>
+              <span>Loan / EMI</span>
+            </button>
+            <button class="nav-item" data-view="investment">
+              <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg>
+              <span>Investment / SIP</span>
+            </button>
+            <button class="nav-item" data-view="converter">
+              <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="1" y="4" width="22" height="16" rx="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg>
+              <span>Currency</span>
+            </button>
+            <button class="nav-item" data-view="insights">
+              <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18h6"/><path d="M10 22h4"/><path d="M12 2a7 7 0 00-4 12.7c.6.5 1 1.3 1 2.3h6c0-1 .4-1.8 1-2.3A7 7 0 0012 2z"/></svg>
+              <span>AI Insights</span>
+            </button>
+          </div>
+
+          <div class="nav-section nav-section-bottom">
+            <span class="nav-section-label">Data & Account</span>
+            <button class="nav-item" id="openUploadModal">
+              <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+              <span>Upload CSV</span>
+            </button>
+            <button class="nav-item logout-nav-item" id="app-logout-btn">
+              <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+              <span>Exit / Landing</span>
+            </button>
+          </div>
+        </nav>
+      </aside>
+
+      <!-- ----- MAIN CONTENT AREA ----- -->
+      <main class="content">
+
+        <!-- ==================== VIEW: DASHBOARD ==================== -->
+        <section class="view view-active" id="view-dashboard">
+          <div class="view-panel">
+            <div class="view-panel-header">
+              <div>
+                <h2>Financial Overview</h2>
+                <p class="view-panel-sub">Real-time metrics calculated deterministically from your active transactions.</p>
+              </div>
+              <div class="header-actions">
+                <button class="btn-ghost btn-sm" id="dash-refresh-btn">⟳ Refresh</button>
+              </div>
+            </div>
+
+            <div class="view-panel-body">
+              <!-- KPI Cards -->
+              <div class="metric-grid">
+                <div class="metric-card income">
+                  <span class="metric-label">Total Income</span>
+                  <span class="metric-value" id="metricIncome">₹0</span>
+                  <span class="metric-sub" id="metricIncomeSub">0 entries</span>
+                </div>
+                <div class="metric-card expense">
+                  <span class="metric-label">Total Expenses</span>
+                  <span class="metric-value" id="metricExpenses">₹0</span>
+                  <span class="metric-sub" id="metricExpenseSub">0 entries</span>
+                </div>
+                <div class="metric-card balance">
+                  <span class="metric-label">Net Balance</span>
+                  <span class="metric-value" id="metricBalance">₹0</span>
+                  <span class="metric-sub">Income - Expenses</span>
+                </div>
+                <div class="metric-card rate">
+                  <span class="metric-label">Savings Rate</span>
+                  <span class="metric-value" id="metricRate">0%</span>
+                  <span class="metric-sub">Benchmark: &ge; 20%</span>
+                </div>
+              </div>
+
+              <!-- Charts Grid -->
+              <div class="chart-grid">
+                <div class="chart-card">
+                  <div class="chart-header">
+                    <h3>Expense by Category</h3>
+                    <span class="chart-badge" id="categoryCountBadge">0 categories</span>
+                  </div>
+                  <div class="chart-wrapper">
+                    <canvas id="categoryChart"></canvas>
+                  </div>
+                </div>
+
+                <div class="chart-card">
+                  <div class="chart-header">
+                    <h3>Monthly Cashflow Trend</h3>
+                    <span class="chart-badge" id="monthCountBadge">0 months</span>
+                  </div>
+                  <div class="chart-wrapper">
+                    <canvas id="monthlyChart"></canvas>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Split Panel: Top Categories & Recent Transactions -->
+              <div class="dash-split-grid">
+                <div class="panel">
+                  <div class="panel-header">
+                    <h3>Top Spending Categories</h3>
+                  </div>
+                  <ul class="top-categories" id="topCategoriesList"></ul>
+                </div>
+
+                <div class="panel">
+                  <div class="panel-header">
+                    <h3>Recent Transactions</h3>
+                    <button class="link-btn" id="dash-view-all-txns">View all &rarr;</button>
+                  </div>
+                  <div class="recent-txns-table-wrap">
+                    <table class="simple-table" id="recentTxnsTable">
+                      <thead>
+                        <tr>
+                          <th>Date</th>
+                          <th>Description</th>
+                          <th>Category</th>
+                          <th>Amount</th>
+                        </tr>
+                      </thead>
+                      <tbody id="recentTxnsBody">
+                        <tr><td colspan="4" class="empty-hint">Loading…</td></tr>
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              </div>
+
+            </div>
+          </div>
+        </section>
+
+
+        <!-- ==================== VIEW: AI CHAT ==================== -->
+        <section class="view" id="view-chat">
+          <div class="chat-panel">
+            <div class="chat-header">
+              <div class="chat-title">
+                <div class="chat-avatar">✦</div>
+                <div>
+                  <h2>Ask FinAI</h2>
+                  <p class="chat-subtitle">Your AI personal finance assistant — grounded in your data</p>
+                </div>
+              </div>
+              <div class="chat-actions">
+                <button id="clearChatBtn" class="clear-btn" title="Clear chat history">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/><path d="M10 11v6M14 11v6"/></svg>
+                  Clear Chat
+                </button>
+              </div>
+            </div>
+
+            <div class="chat-messages" id="chatMessages">
+              <div class="msg assistant">
+                <div class="msg-bubble">
+                  <p class="welcome-title">Fin<em>AI</em></p>
+                  <p class="welcome-subtitle">Your Intelligent Personal Finance Assistant</p>
+                  <p class="welcome-desc">Ask anything about your income, spending, savings rate, budgets, or finance concepts. All calculations are executed deterministically with Python/pandas.</p>
+                  
+                  <div class="chat-quick-prompts">
+                    <span class="quick-prompts-label">Quick Prompts:</span>
+                    <div class="quick-chips">
+                      <button class="quick-chip" data-query="What is my savings rate?">💰 Savings Rate</button>
+                      <button class="quick-chip" data-query="Show me my expense by category">📊 Category Breakdown</button>
+                      <button class="quick-chip" data-query="Show me my recent transactions">📋 Recent Transactions</button>
+                      <button class="quick-chip" data-query="How is my financial health?">❤️ Financial Health</button>
+                      <button class="quick-chip" data-query="Suggest a budget for me">📌 50/30/20 Budget</button>
+                      <button class="quick-chip" data-query="What is a SIP and how does it work?">📈 Explain SIP</button>
+                      <button class="quick-chip" data-query="What is an emergency fund and how much do I need?">🛡️ Emergency Fund</button>
+                      <button class="quick-chip" data-query="Give me the sample CSV format">📥 Sample CSV Format</button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="chat-input-area">
+              <div class="chat-input-row">
+                <input type="text" id="chatInput" placeholder="Ask FinAI anything about your finances…" autocomplete="off">
+                <button id="sendChatBtn" title="Send message">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+                </button>
+              </div>
+              <p class="input-hint">Press <kbd>Enter</kbd> to send &middot; <kbd>Shift</kbd>+<kbd>Enter</kbd> for a new line &middot; Calculations are deterministic Python/pandas</p>
+            </div>
+          </div>
+        </section>
+
+
+        <!-- ==================== VIEW: TRANSACTIONS ==================== -->
+        <section class="view" id="view-transactions">
+          <div class="view-panel">
+            <div class="view-panel-header">
+              <div>
+                <h2>Transactions</h2>
+                <p class="view-panel-sub">Search, filter, add, edit, and delete records directly synced with the in-memory dataset.</p>
+              </div>
+              <div class="header-actions">
+                <button class="btn-pill btn-sm" id="txn-open-upload-btn">Upload CSV</button>
+              </div>
+            </div>
+
+            <div class="view-panel-body">
+              <!-- Add / Edit Transaction Form -->
+              <div class="panel add-txn-panel">
+                <div class="panel-header"><h3 id="addTxnHeading">Add a Transaction</h3></div>
+                <div class="add-txn-grid">
+                  <label>Date<input type="date" id="txnDate"></label>
+                  <label>Description<input type="text" id="txnDesc" placeholder="e.g. Grocery store"></label>
+                  <label>Category<input type="text" id="txnCategory" placeholder="e.g. Groceries"></label>
+                  <label>Type
+                    <select id="txnType">
+                      <option value="expense">Expense</option>
+                      <option value="income">Income</option>
+                    </select>
+                  </label>
+                  <label>Amount (₹)<input type="number" id="txnAmount" placeholder="0" min="0.01" step="0.01"></label>
+                </div>
+                <div class="add-txn-actions">
+                  <button id="submitTxnBtn">Add Transaction</button>
+                  <button id="cancelEditBtn" class="secondary-btn hidden">Cancel edit</button>
+                  <span id="txnFormStatus" class="form-status"></span>
+                </div>
+              </div>
+
+              <!-- Transactions Table Panel -->
+              <div class="panel">
+                <div class="panel-header">
+                  <h3>All Transactions</h3>
+                  <span class="table-count" id="tableCountBadge">0 rows</span>
+                </div>
+                <div class="table-controls">
+                  <input type="text" id="txnSearch" placeholder="Search description or category…">
+                  <select id="txnCategoryFilter"><option value="">All categories</option></select>
+                  <select id="txnTypeFilter">
+                    <option value="">All types</option>
+                    <option value="income">Income</option>
+                    <option value="expense">Expense</option>
+                  </select>
+                </div>
+                <div class="table-wrap">
+                  <table id="txnTable">
+                    <thead>
+                      <tr>
+                        <th data-sort="date">Date ▾</th>
+                        <th data-sort="description">Description</th>
+                        <th data-sort="category">Category</th>
+                        <th data-sort="type">Type</th>
+                        <th data-sort="amount">Amount</th>
+                        <th>Actions</th>
+                      </tr>
+                    </thead>
+                    <tbody id="txnTableBody"></tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+
+        <!-- ==================== VIEW: ANALYTICS ==================== -->
+        <section class="view" id="view-analytics">
+          <div class="view-panel">
+            <div class="view-panel-header">
+              <h2>Analytics & Deep Breakdown</h2>
+              <p class="view-panel-sub">Historical trends, savings efficiency, and category expenditure shares.</p>
+            </div>
+            <div class="view-panel-body">
+              <div class="chart-grid">
+                <div class="chart-card">
+                  <div class="chart-header">
+                    <h3>Monthly Income vs Expenses</h3>
+                  </div>
+                  <div class="chart-wrapper">
+                    <canvas id="analyticsMonthlyChart"></canvas>
+                  </div>
+                </div>
+                <div class="chart-card">
+                  <div class="chart-header">
+                    <h3>Savings Rate History (%)</h3>
+                  </div>
+                  <div class="chart-wrapper">
+                    <canvas id="analyticsSavingsChart"></canvas>
+                  </div>
+                </div>
+              </div>
+
+              <div class="panel">
+                <div class="panel-header"><h3>Category Spending Breakdown</h3></div>
+                <div class="cat-breakdown-list" id="catBreakdownList">
+                  <p class="empty-hint">Loading category analytics…</p>
+                </div>
+              </div>
+
+              <div class="analytics-summary-grid">
+                <div class="summary-stat-box">
+                  <span class="stat-label">Top Spending Category</span>
+                  <strong class="stat-val" id="analyticsTopCat">—</strong>
+                </div>
+                <div class="summary-stat-box">
+                  <span class="stat-label">Average Monthly Expense</span>
+                  <strong class="stat-val" id="analyticsAvgExp">—</strong>
+                </div>
+                <div class="summary-stat-box">
+                  <span class="stat-label">Best Savings Month</span>
+                  <strong class="stat-val" id="analyticsBestMonth">—</strong>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+
+        <!-- ==================== VIEW: BUDGET PLANNER ==================== -->
+        <section class="view" id="view-budget">
+          <div class="view-panel">
+            <div class="view-panel-header">
+              <h2>Budget Planner</h2>
+              <p class="view-panel-sub">Set monthly targets per category and compare against actual spending in real time.</p>
+            </div>
+            <div class="view-panel-body">
+              <div class="panel">
+                <div id="budgetInputs" class="budget-inputs"></div>
+                <button id="checkBudgetBtn">Check Budget Status</button>
+                <div id="budgetResult" class="result-box hidden"></div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+
+        <!-- ==================== VIEW: SAVINGS GOAL ==================== -->
+        <section class="view" id="view-goal">
+          <div class="view-panel">
+            <div class="view-panel-header">
+              <h2>Savings Goal Calculator</h2>
+              <p class="view-panel-sub">Project savings milestones based on your actual monthly savings capacity.</p>
+            </div>
+            <div class="view-panel-body">
+              <div class="panel">
+                <div class="goal-form">
+                  <label>Target (₹)<input type="number" id="goalTarget" placeholder="50000"></label>
+                  <label>Timeline (Months)<input type="number" id="goalTimeline" placeholder="6"></label>
+                  <label>Already Saved (₹)<input type="number" id="goalCurrent" placeholder="0" value="0"></label>
+                </div>
+                <button id="analyzeGoalBtn">Analyze Goal</button>
+                <div id="goalResult" class="result-box hidden"></div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+
+        <!-- ==================== VIEW: LOAN / EMI ==================== -->
+        <section class="view" id="view-loan">
+          <div class="view-panel">
+            <div class="view-panel-header">
+              <h2>Loan / EMI Calculator</h2>
+              <p class="view-panel-sub">Standard reducing-balance EMI formula with income affordability check.</p>
+            </div>
+            <div class="view-panel-body">
+              <div class="panel">
+                <div class="goal-form">
+                  <label>Loan Amount (₹)<input type="number" id="loanPrincipal" placeholder="500000"></label>
+                  <label>Interest Rate (% p.a.)<input type="number" id="loanRate" placeholder="9.5" step="0.01"></label>
+                  <label>Tenure (Years)<input type="number" id="loanTenure" placeholder="5" step="0.1"></label>
+                </div>
+                <button id="calculateEmiBtn">Calculate EMI</button>
+                <div id="loanResult" class="result-box hidden"></div>
+                <p class="hint calc-disclaimer">Standard mathematical calculation. Lenders typically prefer total EMIs to remain under 40% of net monthly income.</p>
+              </div>
+            </div>
+          </div>
+        </section>
+
+
+        <!-- ==================== VIEW: INVESTMENT / SIP ==================== -->
+        <section class="view" id="view-investment">
+          <div class="view-panel">
+            <div class="view-panel-header">
+              <h2>Investment Growth Calculator</h2>
+              <p class="view-panel-sub">Project wealth accumulation for Systematic Investment Plans (SIP) or lump-sum deposits.</p>
+            </div>
+            <div class="view-panel-body">
+              <div class="panel">
+                <div class="budget-inputs" style="margin-bottom:10px;">
+                  <label>Mode
+                    <select id="investMode">
+                      <option value="sip">Monthly SIP</option>
+                      <option value="lumpsum">One-time Lump Sum</option>
+                    </select>
+                  </label>
+                  <label id="investAmountLabel">Monthly investment (₹)<input type="number" id="investAmount" placeholder="5000"></label>
+                </div>
+                <div class="goal-form" style="grid-template-columns: repeat(2, 1fr);">
+                  <label>Expected Annual Return (%)<input type="number" id="investRate" placeholder="12" step="0.1"></label>
+                  <label>Duration (Years)<input type="number" id="investYears" placeholder="10" step="0.1"></label>
+                </div>
+                <button id="calculateInvestmentBtn">Project Growth</button>
+                <div id="investmentResult" class="result-box hidden"></div>
+                <p class="hint calc-disclaimer">Compound growth projection based on constant annual return. Actual market returns fluctuate.</p>
+              </div>
+            </div>
+          </div>
+        </section>
+
+
+        <!-- ==================== VIEW: CURRENCY CONVERTER ==================== -->
+        <section class="view" id="view-converter">
+          <div class="view-panel">
+            <div class="view-panel-header">
+              <h2>Live Currency Converter</h2>
+              <p class="view-panel-sub">Convert rates using live international exchange rates from open.er-api.com.</p>
+            </div>
+            <div class="view-panel-body">
+              <div class="panel converter-panel">
+                <div class="converter-form-row">
+                  <div class="form-group">
+                    <label>Amount</label>
+                    <input type="number" id="convAmount" value="1000" min="0" step="any">
+                  </div>
+                  <div class="form-group">
+                    <label>From</label>
+                    <select id="convFrom"></select>
+                  </div>
+                  <div class="converter-swap-wrap">
+                    <button id="convSwapBtn" title="Swap currencies" class="icon-circle-btn">
+                      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="17 1 21 5 17 9"/><path d="M3 11V9a4 4 0 0 1 4-4h14"/><polyline points="7 23 3 19 7 15"/><path d="M21 13v2a4 4 0 0 1-4 4H3"/></svg>
+                    </button>
+                  </div>
+                  <div class="form-group">
+                    <label>To</label>
+                    <select id="convTo"></select>
+                  </div>
+                </div>
+                <button id="convConvertBtn" class="btn-pill">Convert Currency</button>
+                <div class="converter-result-box" id="convResultBox">
+                  <div class="conv-val" id="convResultVal">—</div>
+                  <div class="conv-rate-sub" id="convResultRate">Click convert to fetch latest rate.</div>
+                </div>
+                <p class="hint">Exchange rates updated daily via Open Exchange Rates API.</p>
+              </div>
+            </div>
+          </div>
+        </section>
+
+
+        <!-- ==================== VIEW: INSIGHTS ==================== -->
+        <section class="view" id="view-insights">
+          <div class="view-panel">
+            <div class="view-panel-header">
+              <h2>Financial Health & Insights</h2>
+              <p class="view-panel-sub">Automated deep-dive analysis powered by FinAI's financial insight engine.</p>
+            </div>
+            <div class="view-panel-body">
+              <div class="panel insights-panel">
+                <div class="insights-actions">
+                  <button id="loadHealthInsightBtn">Evaluate Financial Health Score</button>
+                  <button id="loadSpendingInsightBtn" class="secondary-btn">Analyze Spending Patterns</button>
+                </div>
+                <div id="insightsResult" class="insights-result">
+                  <p class="hint">Choose an insight above to generate a report from your current transaction data.</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+      </main>
+    </div>
+  </div>
+
+
+  <!-- ================================================================
+       UPLOAD CSV MODAL
+       ================================================================ -->
+  <div class="modal-overlay hidden" id="uploadModalOverlay">
+    <div class="modal" id="uploadModal">
+      <div class="modal-header">
+        <h3>Upload Transaction CSV</h3>
+        <button class="modal-close" id="closeUploadModal" aria-label="Close">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+        </button>
+      </div>
+      <div class="modal-body">
+        <label class="dropzone" id="dropZone" for="csvInput">
+          <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+          <span class="dropzone-title">Drag & drop your CSV here</span>
+          <span class="dropzone-sub">or click to browse — required columns: date, description, category, type, amount</span>
+          <input type="file" id="csvInput" accept=".csv" hidden>
+        </label>
+        <div class="upload-status" id="uploadStatus"></div>
+        <div class="modal-actions">
+          <button class="link-btn" id="resetDataBtn">Revert to Sample Data</button>
+          <a href="/api/download-sample" class="link-btn download-link" download="sample_transactions.csv">Download Sample CSV</a>
+        </div>
+        <div class="format-guide">
+          <p class="hint">CSV format sample:</p>
+          <div class="code-preview">
+            <code>date,description,category,type,amount</code>
+            <code>2026-01-01,Monthly Salary,Salary,income,50000</code>
+            <code>2026-01-03,House Rent,Rent,expense,12000</code>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+
+  <!-- Scripts: Chart.js, Marked.js, and Unified script.js -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.4/chart.umd.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+  <script src="{{ url_for('static', filename='script.js') }}"></script>
+</body>
+</html>

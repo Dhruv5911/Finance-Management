@@ -1,0 +1,123 @@
+date,description,category,type,amount
+2026-01-01,Monthly Salary,Salary,income,50000
+2026-01-03,House Rent,Rent,expense,12000
+2026-01-03,Amazon Shopping,Shopping,expense,3497
+2026-01-04,Water Bill,Utilities,expense,489
+2026-01-05,Mobile Recharge,Utilities,expense,434
+2026-01-05,DMart Groceries,Groceries,expense,2163
+2026-01-06,Internet Bill,Utilities,expense,799
+2026-01-06,Cafe Coffee Day,Food,expense,538
+2026-01-08,Gaming Purchase,Entertainment,expense,331
+2026-01-09,Electricity Bill,Utilities,expense,1514
+2026-01-09,Cloud Storage,Subscriptions,expense,99
+2026-01-09,Pizza Order,Food,expense,854
+2026-01-10,Netflix Subscription,Subscriptions,expense,199
+2026-01-10,Spotify Premium,Subscriptions,expense,119
+2026-01-10,Amazon Prime,Subscriptions,expense,179
+2026-01-11,Big Bazaar Groceries,Groceries,expense,789
+2026-01-12,Grocery Restock,Groceries,expense,1141
+2026-01-12,Restaurant Dinner,Food,expense,364
+2026-01-12,Online Course Fee,Education,expense,1999
+2026-01-13,Big Bazaar Groceries,Groceries,expense,1335
+2026-01-13,Auto Rickshaw,Transport,expense,1058
+2026-01-14,Local Kirana Store,Groceries,expense,1169
+2026-01-16,Amazon Shopping,Shopping,expense,3615
+2026-01-17,Petrol Fill-up,Transport,expense,1233
+2026-01-17,Bowling Night,Entertainment,expense,447
+2026-01-18,Pizza Order,Food,expense,400
+2026-01-18,Swiggy Order,Food,expense,851
+2026-01-18,Petrol Fill-up,Transport,expense,1412
+2026-01-18,Myntra Clothes,Shopping,expense,1025
+2026-01-18,Doctor Consultation,Healthcare,expense,600
+2026-01-20,Pizza Order,Food,expense,325
+2026-01-20,Uber Ride,Transport,expense,888
+2026-01-21,Concert Ticket,Entertainment,expense,1097
+2026-01-22,Restaurant Dinner,Food,expense,868
+2026-01-22,Pizza Order,Food,expense,223
+2026-01-24,Uber Ride,Transport,expense,1496
+2026-01-25,Credit Card Bill Payment,Bills,expense,3500
+2026-01-28,Uber Ride,Transport,expense,1493
+2026-01-28,Transfer to Savings Account,Savings,expense,3000
+2026-01-30,Gift for Friend's Birthday,Other,expense,800
+2026-02-01,Monthly Salary,Salary,income,50000
+2026-02-01,Petrol Fill-up,Transport,expense,1125
+2026-02-03,House Rent,Rent,expense,12000
+2026-02-04,Petrol Fill-up,Transport,expense,1408
+2026-02-05,Restaurant Dinner,Food,expense,292
+2026-02-06,Spotify Premium,Subscriptions,expense,119
+2026-02-07,Pizza Order,Food,expense,661
+2026-02-08,Internet Bill,Utilities,expense,799
+2026-02-08,Mobile Recharge,Utilities,expense,507
+2026-02-08,Netflix Subscription,Subscriptions,expense,199
+2026-02-08,Amazon Prime,Subscriptions,expense,179
+2026-02-08,Ice Cream Treat,Food,expense,182
+2026-02-08,Movie Tickets,Entertainment,expense,345
+2026-02-09,Electricity Bill,Utilities,expense,1504
+2026-02-09,Water Bill,Utilities,expense,489
+2026-02-09,Cloud Storage,Subscriptions,expense,99
+2026-02-09,Zomato Order,Food,expense,366
+2026-02-10,Grocery Restock,Groceries,expense,1340
+2026-02-11,Ice Cream Treat,Food,expense,207
+2026-02-11,Uber Ride,Transport,expense,701
+2026-02-11,Movie Tickets,Entertainment,expense,1404
+2026-02-13,Big Bazaar Groceries,Groceries,expense,1730
+2026-02-13,Pizza Order,Food,expense,619
+2026-02-14,Ola Cab,Transport,expense,1029
+2026-02-14,Valentine's Day Dinner,Other,expense,1500
+2026-02-15,Freelance Web Project,Salary,income,8000
+2026-02-15,Grocery Restock,Groceries,expense,855
+2026-02-17,Auto Rickshaw,Transport,expense,507
+2026-02-17,Home Decor Items,Shopping,expense,2233
+2026-02-18,Myntra Clothes,Shopping,expense,1585
+2026-02-18,Gaming Purchase,Entertainment,expense,1405
+2026-02-19,DMart Groceries,Groceries,expense,2042
+2026-02-19,Pizza Order,Food,expense,472
+2026-02-20,Books Purchase,Education,expense,850
+2026-02-22,Shoe Purchase,Shopping,expense,4378
+2026-02-22,Pharmacy Purchase,Healthcare,expense,450
+2026-02-25,Ola Cab,Transport,expense,1139
+2026-02-25,Credit Card Bill Payment,Bills,expense,4200
+2026-02-26,Big Bazaar Groceries,Groceries,expense,2094
+2026-02-26,Restaurant Dinner,Food,expense,560
+2026-02-28,Transfer to Savings Account,Savings,expense,4000
+2026-03-01,Monthly Salary,Salary,income,50000
+2026-03-01,Uber Ride,Transport,expense,843
+2026-03-02,Ola Cab,Transport,expense,1261
+2026-03-03,House Rent,Rent,expense,12000
+2026-03-03,Big Bazaar Groceries,Groceries,expense,1954
+2026-03-03,Movie Tickets,Entertainment,expense,1960
+2026-03-04,Electricity Bill,Utilities,expense,1430
+2026-03-04,Water Bill,Utilities,expense,355
+2026-03-05,Internet Bill,Utilities,expense,799
+2026-03-05,Spotify Premium,Subscriptions,expense,119
+2026-03-05,Pizza Order,Food,expense,313
+2026-03-05,Petrol Fill-up,Transport,expense,430
+2026-03-05,Dental Checkup,Healthcare,expense,1200
+2026-03-06,Amazon Prime,Subscriptions,expense,179
+2026-03-07,Netflix Subscription,Subscriptions,expense,199
+2026-03-07,Home Decor Items,Shopping,expense,3593
+2026-03-08,Mobile Recharge,Utilities,expense,449
+2026-03-08,Local Kirana Store,Groceries,expense,763
+2026-03-08,Big Bazaar Groceries,Groceries,expense,1378
+2026-03-08,Pizza Order,Food,expense,724
+2026-03-09,Vegetable Market,Groceries,expense,1901
+2026-03-10,Freelance Design Work,Salary,income,6000
+2026-03-10,Cloud Storage,Subscriptions,expense,99
+2026-03-10,Shoe Purchase,Shopping,expense,3251
+2026-03-11,Movie Tickets,Entertainment,expense,1252
+2026-03-12,Swiggy Order,Food,expense,291
+2026-03-14,Street Food,Food,expense,558
+2026-03-14,Certification Exam Fee,Education,expense,3000
+2026-03-17,Cafe Coffee Day,Food,expense,243
+2026-03-18,Restaurant Dinner,Food,expense,748
+2026-03-18,Auto Rickshaw,Transport,expense,101
+2026-03-20,Petrol Fill-up,Transport,expense,1100
+2026-03-20,Donation to Charity,Other,expense,500
+2026-03-23,Movie Tickets,Entertainment,expense,668
+2026-03-24,Myntra Clothes,Shopping,expense,3420
+2026-03-25,Zomato Order,Food,expense,262
+2026-03-25,Credit Card Bill Payment,Bills,expense,2900
+2026-03-26,Pizza Order,Food,expense,582
+2026-03-27,Local Kirana Store,Groceries,expense,933
+2026-03-27,Petrol Fill-up,Transport,expense,590
+2026-03-28,Transfer to Savings Account,Savings,expense,5000
