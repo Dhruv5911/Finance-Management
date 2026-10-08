@@ -20,7 +20,7 @@ const ICON_MAP = {
 
 /** Slim floating icon rail (left side), modelled on the Finexy dashboard. */
 export default function Sidebar() {
-  const { views, activeView, setActiveView, setScreen, setUploadOpen, theme, setTheme } = useApp()
+  const { views, activeView, setActiveView, logout, setUploadOpen, theme, setTheme } = useApp()
 
   return (
     <aside className="rail">
@@ -64,7 +64,7 @@ export default function Sidebar() {
         <button className="rail-btn" onClick={() => setUploadOpen(true)} aria-label="Upload CSV" data-tip="Upload CSV">
           <Upload size={19} />
         </button>
-        <button className="rail-btn" onClick={() => setScreen('landing')} aria-label="Exit" data-tip="Exit">
+        <button className="rail-btn" onClick={logout} aria-label="Exit" data-tip="Log out">
           <LogOut size={19} />
         </button>
       </div>

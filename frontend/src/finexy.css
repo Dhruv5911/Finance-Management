@@ -449,3 +449,81 @@
   .wallet-row { grid-template-columns: 1fr; }
   .chat-shell { height: calc(100vh - 220px); }
 }
+
+/* ============================================================
+   Bento dashboard animation
+   ============================================================ */
+@keyframes bentoIn {
+  from { opacity: 0; transform: translateY(22px) scale(0.96); filter: blur(4px); }
+  to   { opacity: 1; transform: none; filter: blur(0); }
+}
+@keyframes barGrow {
+  from { transform: scaleX(0); }
+  to   { transform: scaleX(1); }
+}
+@keyframes sheen {
+  0%   { transform: translateX(-120%) skewX(-18deg); }
+  55%, 100% { transform: translateX(260%) skewX(-18deg); }
+}
+@keyframes floatGlow {
+  0%, 100% { transform: translate(0, 0); }
+  50%      { transform: translate(-14px, 10px); }
+}
+
+/* "backwards" = hidden until its delay ends, then back to normal styles,
+   so the hover lift still works after the entrance finishes. */
+.bento-in {
+  animation: bentoIn 0.7s cubic-bezier(0.22, 1, 0.36, 1) backwards;
+  animation-delay: calc(var(--i, 0) * 70ms + 60ms);
+}
+
+/* smooth lift on every bento tile */
+.balance-card, .chart-card, .panel, .wallet, .kpi {
+  transition: transform 0.25s cubic-bezier(0.22, 1, 0.36, 1), box-shadow 0.25s ease;
+}
+.balance-card:hover, .chart-card:hover, .panel:hover { transform: translateY(-3px); box-shadow: var(--shadow); }
+.wallet:hover { transform: translateY(-3px) scale(1.02); }
+
+/* bars grow in from the left */
+.wallet-bar i, .progress-fill {
+  transform-origin: left center;
+  animation: barGrow 1s cubic-bezier(0.22, 1, 0.36, 1) 0.5s both;
+}
+
+/* orange hero tile: soft sheen sweep + drifting glow */
+.kpi.hero { overflow: hidden; isolation: isolate; }
+.kpi.hero::before {
+  content: '';
+  position: absolute; inset: 0;
+  width: 40%;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.28), transparent);
+  animation: sheen 5.5s ease-in-out 1.4s infinite;
+  pointer-events: none;
+  z-index: 0;
+}
+.kpi.hero::after {
+  content: '';
+  position: absolute; right: -50px; bottom: -60px;
+  width: 190px; height: 190px; border-radius: 50%;
+  background: radial-gradient(circle, rgba(255,255,255,0.22), transparent 70%);
+  animation: floatGlow 7s ease-in-out infinite;
+  pointer-events: none;
+  z-index: 0;
+}
+.kpi.hero > * { position: relative; z-index: 1; }
+
+/* icon bubbles pop on tile hover */
+.kpi-icon { transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1); }
+.kpi:hover .kpi-icon { transform: rotate(-8deg) scale(1.12); }
+
+/* numbers don't jiggle while counting */
+.balance-amount, .kpi-value { font-variant-numeric: tabular-nums; }
+
+/* smooth light/dark switch */
+.app-shell, .balance-card, .kpi, .chart-card, .panel, .wallet, .wallets,
+.rail-pill, .topbar-brand, .topnav, .topbar-chip { transition-property: background-color, color, box-shadow, transform; transition-duration: .3s; }
+
+@media (prefers-reduced-motion: reduce) {
+  .bento-in { animation: none; }
+  .wallet-bar i, .progress-fill, .kpi.hero::before, .kpi.hero::after { animation: none; }
+}

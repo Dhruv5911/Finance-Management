@@ -10,6 +10,7 @@ import {
 } from 'chart.js'
 import { useApp } from '../App'
 import { PALETTE, chartColors, alpha } from '../theme'
+import useCountUp from '../useCountUp'
 
 ChartJS.register(ArcElement, Tooltip, Legend, CategoryScale, LinearScale, PointElement, LineElement, Filler, BarElement)
 
@@ -24,6 +25,13 @@ function monthDelta(monthly, pick) {
   if (!prev) return null
   return ((cur - prev) / Math.abs(prev)) * 100
 }
+
+function CountUp({ value, format }) {
+  const v = useCountUp(value)
+  return <>{format(v)}</>
+}
+
+const bento = (i) => ({ '--i': i })
 
 function Delta({ value, invert = false, hero = false, suffix }) {
   if (value == null) return suffix ? <span>{suffix}</span> : null
@@ -104,19 +112,19 @@ export default function Dashboard() {
 
   return (
     <div className="view-panel">
-      <div className="dash-hello">
+      <div className="dash-hello bento-in" style={bento(0)}>
         <h1>{greeting}, {name}</h1>
         <p>Stay on top of your money, monitor spending, and ask FinAI anything.</p>
       </div>
 
       <div className="dash-top">
         {/* ---- Total balance ---- */}
-        <section className="balance-card">
+        <section className="balance-card bento-in" style={bento(1)}>
           <div className="balance-head">
             <span className="balance-label">Total Balance</span>
             <span className="currency-pill">INR (₹) <ChevronDown size={14} /></span>
           </div>
-          <div className="balance-amount">{fmt(summary.balance)}</div>
+          <div className="balance-amount"><CountUp value={summary.balance} format={fmt} /></div>
           <div className="delta-row">
             <Delta value={balanceDelta} suffix="than last month" />
             {balanceDelta == null && <span>Income − Expenses</span>}
@@ -135,7 +143,7 @@ export default function Dashboard() {
             <div className="wallets-head">Top spending<span>{Object.keys(categories).length} categories</span></div>
             <div className="wallet-row">
               {topCats.length ? topCats.slice(0, 3).map(([cat, amt], i) => (
-                <div className="wallet" key={cat}>
+                <div className="wallet bento-in" key={cat} style={bento(3 + i)}>
                   <div className="wallet-top">
                     <i className="wallet-dot" style={{ background: PALETTE[i] }} />
                     <span>{cat}</span>
@@ -155,48 +163,48 @@ export default function Dashboard() {
 
         {/* ---- KPI tiles ---- */}
         <section className="kpi-grid">
-          <div className="kpi hero">
+          <div className="kpi hero bento-in" style={bento(2)}>
             <div className="kpi-top">
               <span className="kpi-label">Total Income</span>
               <span className="kpi-icon"><Wallet size={18} /></span>
             </div>
-            <div className="kpi-value">{fmt(summary.total_income)}</div>
+            <div className="kpi-value"><CountUp value={summary.total_income} format={fmt} /></div>
             <div className="kpi-foot">
               <Delta value={incomeDelta} hero suffix="This month" />
               {incomeDelta == null && <span>{summary.transaction_count || 0} total entries</span>}
             </div>
           </div>
 
-          <div className="kpi">
+          <div className="kpi bento-in" style={bento(3)}>
             <div className="kpi-top">
               <span className="kpi-label">Total Expenses</span>
               <span className="kpi-icon"><TrendingDown size={18} /></span>
             </div>
-            <div className="kpi-value">{fmt(summary.total_expenses)}</div>
+            <div className="kpi-value"><CountUp value={summary.total_expenses} format={fmt} /></div>
             <div className="kpi-foot">
               <Delta value={expenseDelta} invert suffix="This month" />
               {expenseDelta == null && <span>{Object.keys(categories).length} categories</span>}
             </div>
           </div>
 
-          <div className="kpi">
+          <div className="kpi bento-in" style={bento(4)}>
             <div className="kpi-top">
               <span className="kpi-label">Net Balance</span>
               <span className="kpi-icon"><Layers size={18} /></span>
             </div>
-            <div className="kpi-value">{fmt(summary.balance)}</div>
+            <div className="kpi-value"><CountUp value={summary.balance} format={fmt} /></div>
             <div className="kpi-foot">
               <Delta value={balanceDelta} suffix="This month" />
               {balanceDelta == null && <span>Income − Expenses</span>}
             </div>
           </div>
 
-          <div className="kpi">
+          <div className="kpi bento-in" style={bento(5)}>
             <div className="kpi-top">
               <span className="kpi-label">Savings Rate</span>
               <span className="kpi-icon"><Percent size={18} /></span>
             </div>
-            <div className="kpi-value">{fmtPct(summary.savings_rate)}</div>
+            <div className="kpi-value"><CountUp value={summary.savings_rate} format={fmtPct} /></div>
             <div className="kpi-foot">
               <span className={`delta ${(Number(summary.savings_rate) || 0) >= 20 ? 'up' : 'down'}`}>
                 {(Number(summary.savings_rate) || 0) >= 20 ? <TrendingUp size={12} /> : <TrendingDown size={12} />}
@@ -210,7 +218,7 @@ export default function Dashboard() {
 
       {/* ---- Charts ---- */}
       <div className="chart-grid">
-        <div className="chart-card">
+        <div className="chart-card bento-in" style={bento(6)}>
           <div className="chart-card-header">
             <h3>Expense by Category</h3>
             <span className="badge badge-orange">{Object.keys(categories).length} categories</span>
@@ -219,7 +227,7 @@ export default function Dashboard() {
             {topCats.length ? <Doughnut data={doughnutData} options={doughnutOptions} /> : <EmptyChart />}
           </div>
         </div>
-        <div className="chart-card">
+        <div className="chart-card bento-in" style={bento(7)}>
           <div className="chart-card-header">
             <h3>Monthly Cashflow Trend</h3>
             <span className="badge badge-orange">{monthly.length} months</span>
@@ -232,7 +240,7 @@ export default function Dashboard() {
 
       {/* ---- Categories + recent ---- */}
       <div className="split-grid">
-        <div className="panel">
+        <div className="panel bento-in" style={bento(8)}>
           <div className="panel-header"><h3>Top Spending Categories</h3></div>
           <div className="cat-list">
             {topCats.length ? topCats.map(([cat, amt], i) => (
@@ -249,7 +257,7 @@ export default function Dashboard() {
           </div>
         </div>
 
-        <div className="panel">
+        <div className="panel bento-in" style={bento(9)}>
           <div className="panel-header">
             <h3>Recent Transactions</h3>
             <button className="btn-ghost" style={{ padding: '6px 14px', fontSize: 12 }} onClick={() => setActiveView('transactions')}>

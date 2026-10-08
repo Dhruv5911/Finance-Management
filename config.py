@@ -20,6 +20,10 @@ class Config:
     SAMPLE_CSV_PATH = os.path.join(BASE_DIR, "data", "sample_transactions.csv")
     KNOWLEDGE_BASE_PATH = os.path.join(BASE_DIR, "data", "finance_knowledge.md")
 
+    # SQLite database file (created automatically on first run)
+    SQLALCHEMY_DATABASE_URI = os.environ.get("DATABASE_URL", "sqlite:///" + os.path.join(BASE_DIR, "finai.db"))
+    SQLALCHEMY_TRACK_MODIFICATIONS = False
+
     ALLOWED_EXTENSIONS = {"csv"}
     REQUIRED_COLUMNS = ["date", "description", "category", "type", "amount"]
     VALID_TYPES = {"income", "expense"}

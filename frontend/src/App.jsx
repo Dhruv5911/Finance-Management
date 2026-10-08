@@ -59,7 +59,7 @@ export default function App() {
   const [transactions, setTransactions] = useState([])
   const [categories, setCategories] = useState({})
   const [monthly, setMonthly] = useState([])
-  const [dataSource, setDataSource] = useState('sample')
+  const [dataSource, setDataSource] = useState('empty')
   const [aiStatus, setAiStatus] = useState('checking')
 
   const addToast = useCallback((msg, type = 'success') => {
@@ -76,7 +76,7 @@ export default function App() {
         fetch('/api/categories'),
         fetch('/api/monthly-summary'),
       ])
-      if (sumRes.ok) { const d = await sumRes.json(); setSummary(d); setDataSource(d.source || 'sample') }
+      if (sumRes.ok) { const d = await sumRes.json(); setSummary(d); setDataSource(d.source || 'empty') }
       if (txnRes.ok) { const d = await txnRes.json(); setTransactions(d.transactions || []) }
       if (catRes.ok) { const d = await catRes.json(); setCategories(d.categories || {}) }
       if (monthRes.ok) { const d = await monthRes.json(); setMonthly(d.months || []) }
@@ -91,6 +91,23 @@ export default function App() {
         setAiStatus(d.gemini_status === 'configured' ? 'connected' : 'fallback')
       }
     } catch { setAiStatus('offline') }
+  }, [])
+
+  // Restore a logged-in session after a page refresh
+  useEffect(() => {
+    fetch('/api/me', { credentials: 'same-origin' })
+      .then(r => r.ok ? r.json() : null)
+      .then(d => { if (d?.user) { setUser(d.user); setScreen('app') } })
+      .catch(() => {})
+  }, [])
+
+  const logout = useCallback(async () => {
+    try { await fetch('/api/logout', { method: 'POST' }) } catch {}
+    setUser(null)
+    setSummary({}); setTransactions([]); setCategories({}); setMonthly([])
+    setDataSource('empty')
+    setActiveView('dashboard')
+    setScreen('landing')
   }, [])
 
   useEffect(() => {
@@ -109,7 +126,7 @@ export default function App() {
     activeView, setActiveView,
     sidebarOpen, setSidebarOpen,
     theme, setTheme,
-    user, setUser,
+    user, setUser, logout,
     toasts, addToast,
     uploadOpen, setUploadOpen,
     summary, transactions, categories, monthly,

@@ -17,15 +17,26 @@ export default function AuthScreen() {
     if (!email.trim()) { setError('Email is required.'); return }
     if (!password || password.length < 6) { setError('Password must be at least 6 characters.'); return }
     setLoading(true)
-    // Simulate local auth (no real backend auth endpoint)
-    await new Promise(r => setTimeout(r, 400))
-    setUser({ name: name || email.split('@')[0], email })
-    addToast(`Welcome, ${name || email.split('@')[0]}!`, 'success')
-    setScreen('app')
-    setLoading(false)
+    try {
+      const res = await fetch(mode === 'signup' ? '/api/register' : '/api/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name: name.trim(), email: email.trim(), password }),
+      })
+      const data = await res.json().catch(() => ({}))
+      if (!res.ok) { setError(data.error || 'Something went wrong. Please try again.'); return }
+      setUser(data.user)
+      addToast(`Welcome, ${data.user.name}!`, 'success')
+      setScreen('app')
+    } catch {
+      setError('Cannot reach the server. Is the backend running?')
+    } finally {
+      setLoading(false)
+    }
   }
 
-  const handleGuest = () => {
+  const handleGuest = async () => {
+    try { await fetch('/api/logout', { method: 'POST' }) } catch {}
     setUser(null)
     setScreen('app')
   }
