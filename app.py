@@ -58,7 +58,7 @@ agent = FinanceAgent(rag_engine=rag_engine, gemini_client=gemini_client, gemini_
 
 STATE = {
     "df": None,          # currently loaded transactions DataFrame
-    "source": None,      # "sample" or "uploaded"
+    "source": None,      # "empty" or "uploaded"
     "filename": None,
     "budgets": {},        # last budgets the user submitted via /api/budget, reused by the monitor
 }
@@ -120,17 +120,27 @@ def _validate_dataframe(df: pd.DataFrame):
     return errors
 
 
-def _load_sample_data():
-    df = _load_dataframe_from_csv(Config.SAMPLE_CSV_PATH)
-    df = df.dropna(subset=["date", "amount"]).reset_index(drop=True)
-    df["id"] = df.index.astype(int)
-    STATE["df"] = df
-    STATE["source"] = "sample"
-    STATE["filename"] = "sample_transactions.csv"
+def _empty_dataframe() -> pd.DataFrame:
+    """A typed, zero-row transactions frame so every tool works with no data."""
+    return pd.DataFrame({
+        "id": pd.Series(dtype="int64"),
+        "date": pd.Series(dtype="datetime64[ns]"),
+        "description": pd.Series(dtype="object"),
+        "category": pd.Series(dtype="object"),
+        "type": pd.Series(dtype="object"),
+        "amount": pd.Series(dtype="float64"),
+    })
 
 
-# Load sample data at startup so the dashboard has something to show immediately
-_load_sample_data()
+def _reset_to_empty():
+    STATE["df"] = _empty_dataframe()
+    STATE["source"] = "empty"
+    STATE["filename"] = None
+
+
+# Start with NO transactions: everything reads 0 until the user uploads a CSV
+# or adds a transaction. (data/sample_transactions.csv is still downloadable.)
+_reset_to_empty()
 
 
 # ---------------------------------------------------------------------------
@@ -191,8 +201,8 @@ def upload_csv():
 @app.route("/api/clear-data", methods=["POST"])
 def clear_data():
     try:
-        _load_sample_data()
-        return jsonify({"message": "Reverted to sample data.", "row_count": len(STATE["df"])})
+        _reset_to_empty()
+        return jsonify({"message": "All data cleared.", "row_count": 0})
     except Exception:
         traceback.print_exc()
         return jsonify({"error": "Could not reset data."}), 500
@@ -297,6 +307,8 @@ def add_transaction():
         }])
 
         STATE["df"] = pd.concat([df, new_row], ignore_index=True)
+        if STATE["source"] == "empty":
+            STATE["source"] = "manual"
 
         return jsonify({
             "message": "Transaction added successfully.",

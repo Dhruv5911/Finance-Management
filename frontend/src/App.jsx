@@ -1,6 +1,7 @@
 import React, { useState, useEffect, createContext, useContext, useCallback, useRef } from 'react'
 import './index.css'
 import './App.css'
+import './finexy.css'
 
 // Views
 import Dashboard from './views/Dashboard'
@@ -44,6 +45,13 @@ export default function App() {
   const [screen, setScreen] = useState('landing') // landing | auth | app
   const [activeView, setActiveView] = useState('dashboard')
   const [sidebarOpen, setSidebarOpen] = useState(true)
+  const [theme, setThemeState] = useState(() => {
+    try { return localStorage.getItem('finai-theme') === 'dark' ? 'dark' : 'light' } catch { return 'light' }
+  })
+  const setTheme = useCallback((t) => {
+    setThemeState(t)
+    try { localStorage.setItem('finai-theme', t) } catch {}
+  }, [])
   const [user, setUser] = useState(null)
   const [toasts, setToasts] = useState([])
   const [uploadOpen, setUploadOpen] = useState(false)
@@ -86,6 +94,10 @@ export default function App() {
   }, [])
 
   useEffect(() => {
+    document.documentElement.setAttribute('data-theme', theme)
+  }, [theme])
+
+  useEffect(() => {
     if (screen === 'app') {
       refreshData()
       checkAI()
@@ -96,6 +108,7 @@ export default function App() {
     screen, setScreen,
     activeView, setActiveView,
     sidebarOpen, setSidebarOpen,
+    theme, setTheme,
     user, setUser,
     toasts, addToast,
     uploadOpen, setUploadOpen,
@@ -117,7 +130,7 @@ export default function App() {
 }
 
 function AppShell() {
-  const { activeView, sidebarOpen } = useApp()
+  const { activeView } = useApp()
 
   const viewMap = {
     dashboard: <Dashboard />,
@@ -133,7 +146,7 @@ function AppShell() {
   }
 
   return (
-    <div className={`app-shell ${sidebarOpen ? 'sidebar-open' : 'sidebar-closed'}`}>
+    <div className="app-shell">
       <Sidebar />
       <div className="app-main">
         <Topbar />

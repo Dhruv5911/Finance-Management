@@ -5,20 +5,18 @@ import {
   LineElement, Filler, Tooltip, Legend
 } from 'chart.js'
 import { useApp } from '../App'
+import { PALETTE, chartColors, alpha } from '../theme'
 
 ChartJS.register(CategoryScale, LinearScale, BarElement, PointElement, LineElement, Filler, Tooltip, Legend)
 
 function fmt(v) { return '₹' + (Number(v) || 0).toLocaleString('en-IN', { maximumFractionDigits: 0 }) }
 
-const PALETTE = ['#e8621a','#3ecf8e','#60a5fa','#ef4444','#c084fc','#fb7185','#2dd4bf','#fbbf6e','#a3e635','#fb923c']
-
-const GRID_COLOR = '#1f1f28'
-const TICK_COLOR = '#5c5c70'
-const gridOpts = { color: GRID_COLOR }
-const tickOpts = { color: TICK_COLOR, font: { size: 10 } }
 
 export default function Analytics() {
-  const { categories, monthly } = useApp()
+  const { categories, monthly, theme } = useApp()
+  const C = chartColors(theme)
+  const gridOpts = { color: C.grid }
+  const tickOpts = { color: C.tick, font: { size: 11 } }
 
   const catEntries = Object.entries(categories).sort((a, b) => b[1] - a[1])
   const totalExp = catEntries.reduce((s, [, v]) => s + v, 0) || 1
@@ -27,13 +25,13 @@ export default function Analytics() {
   const barData = {
     labels: monthly.map(m => m.month),
     datasets: [
-      { label: 'Income', data: monthly.map(m => m.income), backgroundColor: 'rgba(62,207,142,0.8)', borderRadius: 6, borderSkipped: false },
-      { label: 'Expenses', data: monthly.map(m => m.expenses), backgroundColor: 'rgba(232,98,26,0.8)', borderRadius: 6, borderSkipped: false },
+      { label: 'Income', data: monthly.map(m => m.income), backgroundColor: alpha(C.income, 0.85), borderRadius: 8, borderSkipped: false },
+      { label: 'Expenses', data: monthly.map(m => m.expenses), backgroundColor: alpha(C.expense, 0.9), borderRadius: 8, borderSkipped: false },
     ]
   }
   const barOptions = {
     responsive: true, maintainAspectRatio: false,
-    plugins: { legend: { labels: { color: '#9898a8', font: { size: 11 }, boxWidth: 10 } }, tooltip: { callbacks: { label: ctx => ` ${ctx.dataset.label}: ${fmt(ctx.raw)}` } } },
+    plugins: { legend: { labels: { color: C.legend, font: { size: 12 }, boxWidth: 10, usePointStyle: true, pointStyle: 'circle' } }, tooltip: { callbacks: { label: ctx => ` ${ctx.dataset.label}: ${fmt(ctx.raw)}` } } },
     scales: { x: { grid: gridOpts, ticks: tickOpts }, y: { grid: gridOpts, ticks: { ...tickOpts, callback: v => fmt(v) } } }
   }
 
@@ -43,13 +41,13 @@ export default function Analytics() {
     datasets: [{
       label: 'Savings Rate %',
       data: monthly.map(m => m.income > 0 ? ((m.income - m.expenses) / m.income * 100).toFixed(1) : 0),
-      borderColor: '#60a5fa', backgroundColor: 'rgba(96,165,250,0.1)',
+      borderColor: C.blue, backgroundColor: alpha(C.blue, 0.10),
       fill: true, tension: 0.4, pointRadius: 4, borderWidth: 2,
     }]
   }
   const lineOptions = {
     responsive: true, maintainAspectRatio: false,
-    plugins: { legend: { labels: { color: '#9898a8', font: { size: 11 }, boxWidth: 10 } }, tooltip: { callbacks: { label: ctx => ` ${ctx.raw}%` } } },
+    plugins: { legend: { labels: { color: C.legend, font: { size: 12 }, boxWidth: 10, usePointStyle: true, pointStyle: 'circle' } }, tooltip: { callbacks: { label: ctx => ` ${ctx.raw}%` } } },
     scales: {
       x: { grid: gridOpts, ticks: tickOpts },
       y: { grid: gridOpts, ticks: { ...tickOpts, callback: v => v + '%' }, min: 0 }

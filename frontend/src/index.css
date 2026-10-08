@@ -1,33 +1,96 @@
+/* ============================================================
+   FinAI design tokens — Finexy-style light theme (default)
+   with the original dark theme kept as [data-theme="dark"]
+   ============================================================ */
 :root {
+  --bg-primary: #eceef2;
+  --bg-secondary: #f4f5f8;
+  --bg-card: #ffffff;
+  --bg-card-hover: #f7f8fa;
+  --bg-sidebar: #ffffff;
+  --bg-tile: #f4f5f8;
+  --border: #e8eaee;
+  --border-subtle: #f0f1f4;
+  --track: #e9ebf0;
+
+  --accent: #f2571d;
+  --accent-light: #ff7a45;
+  --accent-grad: linear-gradient(145deg, #ff8a52 0%, #f2571d 55%, #e8450f 100%);
+  --accent-dim: rgba(242, 87, 29, 0.12);
+  --accent-dim2: rgba(242, 87, 29, 0.06);
+
+  --ink: #17181b;
+  --ink-hover: #2b2d33;
+  --ink-text: #ffffff;
+
+  --green: #17a35a;
+  --green-dim: rgba(23, 163, 90, 0.11);
+  --red: #e5484d;
+  --red-dim: rgba(229, 72, 77, 0.10);
+  --blue: #3b82f6;
+  --blue-dim: rgba(59, 130, 246, 0.10);
+
+  --text-primary: #131417;
+  --text-secondary: #5f6570;
+  --text-muted: #9097a3;
+
+  --radius: 24px;
+  --radius-sm: 14px;
+  --radius-lg: 30px;
+  --shadow: 0 12px 40px rgba(20, 24, 40, 0.10);
+  --shadow-sm: 0 1px 2px rgba(20, 24, 40, 0.04), 0 6px 20px rgba(20, 24, 40, 0.04);
+  --transition: 0.18s ease;
+  --sidebar-w: 76px;
+  --topbar-h: 88px;
+  --font: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+
+  /* chart tokens (read by src/theme.js) */
+  --chart-grid: #eef0f4;
+  --chart-tick: #9097a3;
+  --chart-legend: #5f6570;
+
+  color-scheme: light;
+}
+
+[data-theme="dark"] {
   --bg-primary: #0f0f11;
   --bg-secondary: #16161a;
   --bg-card: #1c1c22;
   --bg-card-hover: #23232b;
-  --bg-sidebar: #13131a;
+  --bg-sidebar: #1c1c22;
+  --bg-tile: #16161a;
   --border: #2a2a35;
-  --border-subtle: #1f1f28;
-  --accent: #e8621a;
-  --accent-light: #f07840;
-  --accent-dim: rgba(232, 98, 26, 0.15);
-  --accent-dim2: rgba(232, 98, 26, 0.08);
+  --border-subtle: #22222b;
+  --track: #2a2a35;
+
+  --accent: #f2571d;
+  --accent-light: #ff7a45;
+  --accent-dim: rgba(242, 87, 29, 0.16);
+  --accent-dim2: rgba(242, 87, 29, 0.08);
+
+  --ink: #f0f0f4;
+  --ink-hover: #ffffff;
+  --ink-text: #111113;
+
   --green: #3ecf8e;
-  --green-dim: rgba(62, 207, 142, 0.12);
+  --green-dim: rgba(62, 207, 142, 0.13);
   --red: #ef4444;
-  --red-dim: rgba(239, 68, 68, 0.12);
+  --red-dim: rgba(239, 68, 68, 0.13);
   --blue: #60a5fa;
-  --blue-dim: rgba(96, 165, 250, 0.12);
+  --blue-dim: rgba(96, 165, 250, 0.13);
+
   --text-primary: #f0f0f4;
   --text-secondary: #9898a8;
   --text-muted: #5c5c70;
-  --radius: 14px;
-  --radius-sm: 8px;
-  --radius-lg: 20px;
-  --shadow: 0 4px 24px rgba(0,0,0,0.4);
-  --shadow-sm: 0 2px 8px rgba(0,0,0,0.3);
-  --transition: 0.18s ease;
-  --sidebar-w: 230px;
-  --topbar-h: 60px;
-  --font: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+
+  --shadow: 0 12px 40px rgba(0, 0, 0, 0.5);
+  --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.3);
+
+  --chart-grid: #23232b;
+  --chart-tick: #5c5c70;
+  --chart-legend: #9898a8;
+
+  color-scheme: dark;
 }
 
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
@@ -45,90 +108,114 @@ html, body {
 #root { height: 100%; }
 
 /* ---- Scrollbar ---- */
-::-webkit-scrollbar { width: 5px; height: 5px; }
+::-webkit-scrollbar { width: 6px; height: 6px; }
 ::-webkit-scrollbar-track { background: transparent; }
-::-webkit-scrollbar-thumb { background: var(--border); border-radius: 99px; }
+::-webkit-scrollbar-thumb { background: var(--track); border-radius: 99px; }
 
 /* ---- Buttons ---- */
 button { font-family: inherit; cursor: pointer; border: none; outline: none; }
 
+/* Primary = dark "ink" pill, like the Transfer button in the reference */
 .btn-primary {
-  background: var(--accent);
-  color: #fff;
-  border-radius: 50px;
-  padding: 9px 20px;
+  background: var(--ink);
+  color: var(--ink-text);
+  border-radius: 999px;
+  padding: 10px 22px;
   font-size: 13px;
   font-weight: 600;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
   transition: background var(--transition), transform var(--transition);
 }
-.btn-primary:hover { background: var(--accent-light); transform: translateY(-1px); }
+.btn-primary:hover { background: var(--ink-hover); transform: translateY(-1px); }
 
+.btn-accent {
+  background: var(--accent);
+  color: #fff;
+  border-radius: 999px;
+  padding: 10px 22px;
+  font-size: 13px;
+  font-weight: 600;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  transition: background var(--transition), transform var(--transition);
+}
+.btn-accent:hover { background: var(--accent-light); transform: translateY(-1px); }
+
+/* Ghost = soft grey pill, like the Request button */
 .btn-ghost {
-  background: var(--bg-card);
-  color: var(--text-secondary);
-  border: 1px solid var(--border);
-  border-radius: 50px;
-  padding: 8px 16px;
+  background: var(--bg-tile);
+  color: var(--text-primary);
+  border: none;
+  border-radius: 999px;
+  padding: 10px 20px;
   font-size: 13px;
   font-weight: 500;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
   transition: all var(--transition);
 }
-.btn-ghost:hover { background: var(--bg-card-hover); color: var(--text-primary); border-color: var(--accent); }
+.btn-ghost:hover { background: var(--accent-dim); color: var(--accent); }
 
 .btn-icon {
-  background: var(--bg-card);
-  border: 1px solid var(--border);
+  background: var(--bg-tile);
+  border: none;
   color: var(--text-secondary);
-  border-radius: 10px;
-  padding: 8px;
+  border-radius: 50%;
+  width: 38px;
+  height: 38px;
   display: flex;
   align-items: center;
   justify-content: center;
   transition: all var(--transition);
 }
-.btn-icon:hover { background: var(--accent-dim); border-color: var(--accent); color: var(--accent); }
+.btn-icon:hover { background: var(--accent-dim); color: var(--accent); }
 
 /* ---- Input ---- */
 input[type="text"], input[type="number"], input[type="date"], input[type="email"], input[type="password"], select, textarea {
   width: 100%;
-  background: var(--bg-secondary);
-  border: 1px solid var(--border);
+  background: var(--bg-tile);
+  border: 1px solid transparent;
   border-radius: var(--radius-sm);
   color: var(--text-primary);
   font-family: var(--font);
   font-size: 13px;
-  padding: 9px 12px;
-  transition: border-color var(--transition), box-shadow var(--transition);
+  padding: 11px 14px;
+  transition: border-color var(--transition), box-shadow var(--transition), background var(--transition);
   outline: none;
 }
 input:focus, select:focus, textarea:focus {
+  background: var(--bg-card);
   border-color: var(--accent);
-  box-shadow: 0 0 0 3px var(--accent-dim);
+  box-shadow: 0 0 0 4px var(--accent-dim);
 }
-input::placeholder { color: var(--text-muted); }
-select option { background: var(--bg-secondary); }
+input::placeholder, textarea::placeholder { color: var(--text-muted); }
+select option { background: var(--bg-card); color: var(--text-primary); }
 
 /* ---- Label ---- */
 label {
   display: flex;
   flex-direction: column;
-  gap: 5px;
+  gap: 6px;
   font-size: 12px;
   font-weight: 500;
   color: var(--text-secondary);
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
 }
 
 /* ---- Scrollable area ---- */
 .scroll-y { overflow-y: auto; }
 .scroll-x { overflow-x: auto; }
 
-/* ---- Badge ---- */
+/* ---- Badge (soft pills, like the "↑ 5%" chips) ---- */
 .badge {
   display: inline-flex;
   align-items: center;
-  padding: 3px 9px;
+  padding: 4px 10px;
   border-radius: 99px;
   font-size: 11px;
   font-weight: 600;
@@ -142,18 +229,16 @@ label {
 /* ---- Card ---- */
 .card {
   background: var(--bg-card);
-  border: 1px solid var(--border);
   border-radius: var(--radius);
-  padding: 20px;
+  padding: 24px;
+  box-shadow: var(--shadow-sm);
 }
 
 /* ---- Section title ---- */
 .section-title {
-  font-size: 12px;
+  font-size: 13px;
   font-weight: 600;
-  color: var(--text-muted);
-  text-transform: uppercase;
-  letter-spacing: 0.06em;
+  color: var(--text-secondary);
   margin-bottom: 10px;
 }
 
@@ -165,21 +250,21 @@ label {
   display: inline-flex;
   align-items: center;
   gap: 5px;
-  background: var(--bg-secondary);
-  border: 1px solid var(--border);
-  border-radius: 50px;
-  padding: 4px 12px;
+  background: var(--bg-tile);
+  border: none;
+  border-radius: 999px;
+  padding: 7px 14px;
   font-size: 12px;
   color: var(--text-secondary);
   cursor: pointer;
   transition: all var(--transition);
   white-space: nowrap;
 }
-.chip:hover { border-color: var(--accent); color: var(--accent); background: var(--accent-dim2); }
+.chip:hover { color: var(--accent); background: var(--accent-dim); }
 
 /* ---- Metric number ---- */
 .metric-num {
-  font-size: 26px;
+  font-size: 28px;
   font-weight: 700;
   letter-spacing: -0.03em;
   line-height: 1.1;
@@ -187,9 +272,9 @@ label {
 
 /* ---- Progress bar ---- */
 .progress-bar {
-  height: 6px;
+  height: 8px;
   border-radius: 99px;
-  background: var(--border);
+  background: var(--track);
   overflow: hidden;
 }
 .progress-fill {
@@ -210,17 +295,16 @@ label {
 }
 .toast {
   background: var(--bg-card);
-  border: 1px solid var(--border);
   border-radius: var(--radius-sm);
-  padding: 12px 16px;
+  padding: 13px 18px;
   font-size: 13px;
   color: var(--text-primary);
   box-shadow: var(--shadow);
   animation: slideUp 0.3s ease;
-  max-width: 300px;
+  max-width: 320px;
 }
-.toast.success { border-left: 3px solid var(--green); }
-.toast.error { border-left: 3px solid var(--red); }
+.toast.success { border-left: 4px solid var(--green); }
+.toast.error { border-left: 4px solid var(--red); }
 @keyframes slideUp {
   from { transform: translateY(20px); opacity: 0; }
   to { transform: translateY(0); opacity: 1; }
@@ -229,17 +313,15 @@ label {
 /* ---- Table ---- */
 table { width: 100%; border-collapse: collapse; }
 th {
-  font-size: 11px;
-  font-weight: 600;
+  font-size: 12px;
+  font-weight: 500;
   color: var(--text-muted);
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-  padding: 10px 12px;
+  padding: 12px 14px;
   text-align: left;
   border-bottom: 1px solid var(--border);
 }
 td {
-  padding: 11px 12px;
+  padding: 13px 14px;
   font-size: 13px;
   border-bottom: 1px solid var(--border-subtle);
   color: var(--text-primary);
