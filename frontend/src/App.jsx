@@ -93,13 +93,29 @@ export default function App() {
     } catch { setAiStatus('offline') }
   }, [])
 
-  // Restore a logged-in session after a page refresh
+  // Restore a logged-in session after a page refresh or Google OAuth callback
   useEffect(() => {
-    fetch('/api/me', { credentials: 'same-origin' })
+    const params = new URLSearchParams(window.location.search)
+    const isGoogleLogin = params.get('login') === 'google'
+
+    fetch('/api/me', { credentials: 'include' })
       .then(r => r.ok ? r.json() : null)
-      .then(d => { if (d?.user) { setUser(d.user); setScreen('app') } })
+      .then(d => {
+        if (d?.user) {
+          setUser(d.user)
+          setScreen('app')
+          if (isGoogleLogin) {
+            addToast(`Welcome back, ${d.user.name}!`, 'success')
+          }
+        }
+        if (isGoogleLogin) {
+          const url = new URL(window.location.href)
+          url.searchParams.delete('login')
+          window.history.replaceState({}, '', url.pathname + (url.search ? url.search : ''))
+        }
+      })
       .catch(() => {})
-  }, [])
+  }, [addToast])
 
   const logout = useCallback(async () => {
     try { await fetch('/api/logout', { method: 'POST' }) } catch {}

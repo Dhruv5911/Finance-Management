@@ -4,13 +4,21 @@ Flask backend: API routes, SQLite storage, auth, and wiring together the agent, 
 """
 import os
 import traceback
+import smtplib
+import secrets
+from datetime import datetime, timedelta
+from urllib.parse import quote
+from email.mime.multipart import MIMEMultipart
+from email.mime.text import MIMEText
 
 import pandas as pd
-from flask import Flask, request, jsonify, render_template, session, send_file
+import requests
+from authlib.integrations.flask_client import OAuth
+from flask import Flask, request, jsonify, render_template, session, send_file, redirect, url_for
 from flask_cors import CORS
 
 from config import Config
-from models import db, User, Transaction, Budget
+from models import db, User, Transaction, Budget, EmailOTP
 from rag.rag_engine import RAGEngine
 from agent.finance_agent import FinanceAgent
 from agent.autonomous_monitor import AutonomousMonitor
@@ -19,16 +27,49 @@ from tools import goal_tools as goal_tools_mod
 
 app = Flask(__name__)
 app.config.from_object(Config)
-app.secret_key = os.environ.get("FLASK_SECRET_KEY", "finai-dev-secret-change-me")
-CORS(app, supports_credentials=True)
+app.secret_key = Config.SECRET_KEY
+app.config.update(
+    SESSION_COOKIE_SAMESITE="Lax",
+    SESSION_COOKIE_SECURE=False,
+    SESSION_COOKIE_HTTPONLY=True,
+)
+CORS(app, supports_credentials=True, origins=[Config.FRONTEND_URL, "http://localhost:5173", "http://127.0.0.1:5173"])
+
+# Google OAuth setup
+oauth = OAuth(app)
+oauth.register(
+    name="google",
+    client_id=Config.GOOGLE_CLIENT_ID,
+    client_secret=Config.GOOGLE_CLIENT_SECRET,
+    server_metadata_url="https://accounts.google.com/.well-known/openid-configuration",
+    client_kwargs={"scope": "openid email profile"},
+)
 
 # ---------------------------------------------------------------------------
 # Database (SQLite): created automatically on first run -> FinAI/finai.db
 # ---------------------------------------------------------------------------
 
 db.init_app(app)
-with app.app_context():
-    db.create_all()
+
+def _run_sqlite_migrations():
+    """Ensure newly added columns and tables exist in an existing SQLite database."""
+    with app.app_context():
+        db.create_all()
+        try:
+            with db.engine.connect() as conn:
+                res = conn.execute(db.text("PRAGMA table_info(users)")).fetchall()
+                cols = {row[1] for row in res}
+                if "email_verified" not in cols:
+                    conn.execute(db.text("ALTER TABLE users ADD COLUMN email_verified BOOLEAN DEFAULT 0"))
+                if "google_id" not in cols:
+                    conn.execute(db.text("ALTER TABLE users ADD COLUMN google_id VARCHAR(255)"))
+                if "avatar_url" not in cols:
+                    conn.execute(db.text("ALTER TABLE users ADD COLUMN avatar_url VARCHAR(500)"))
+                conn.commit()
+        except Exception as e:
+            print(f"[FinAI] SQLite migration notice: {e}")
+
+_run_sqlite_migrations()
 
 # ---------------------------------------------------------------------------
 # Startup: Gemini client, then RAG index (embeddings need the client), then
@@ -205,6 +246,107 @@ def index():
 
 
 # ---------------------------------------------------------------------------
+# Helpers — Email OTP (Gmail SMTP)
+# ---------------------------------------------------------------------------
+
+def send_otp_email(to_email: str, otp_code: str) -> bool:
+    """Send a 6-digit OTP verification code via Gmail SMTP (smtp.gmail.com:587 STARTTLS)."""
+    username = Config.MAIL_USERNAME
+    password = Config.MAIL_APP_PASSWORD
+
+    if not username or not password:
+        print(f"\n[FinAI DEV OTP] MAIL_USERNAME / MAIL_APP_PASSWORD not set in .env.")
+        print(f"[FinAI DEV OTP] Verification code for {to_email} is: {otp_code}\n")
+        return False
+
+    msg = MIMEMultipart("alternative")
+    msg["Subject"] = f"Your FinAI verification code is {otp_code}"
+    msg["From"] = f"FinAI <{username}>"
+    msg["To"] = to_email
+
+    text_body = (
+        f"Your FinAI verification code is: {otp_code}\n\n"
+        f"This code will expire in 10 minutes.\n"
+        f"If you did not request this code, please ignore this email."
+    )
+
+    html_body = f"""<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <style>
+    body {{ font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; background-color: #f7f6fc; margin: 0; padding: 28px; color: #17142b; }}
+    .card {{ max-width: 480px; margin: 0 auto; background: #ffffff; border-radius: 24px; padding: 36px 32px; box-shadow: 0 16px 40px rgba(123,92,255,0.08); border: 1px solid #ebe7ff; }}
+    .logo {{ display: inline-flex; align-items: center; gap: 10px; font-weight: 700; font-size: 20px; color: #17142b; margin-bottom: 24px; }}
+    .logo-badge {{ width: 34px; height: 34px; border-radius: 50%; background: linear-gradient(135deg, #f2571d, #ff8a52); color: #fff; display: inline-flex; align-items: center; justify-content: center; font-weight: bold; font-size: 16px; }}
+    h1 {{ font-size: 22px; font-weight: 700; color: #17142b; margin: 0 0 12px; }}
+    p {{ font-size: 14.5px; line-height: 1.6; color: #58556f; margin: 0 0 20px; }}
+    .otp-box {{ background: linear-gradient(160deg, #f3efff 0%, #ece5ff 100%); border: 1.5px dashed #7b5cff; border-radius: 16px; padding: 20px 24px; text-align: center; margin: 24px 0; }}
+    .otp-code {{ font-family: 'Space Grotesk', monospace, sans-serif; font-size: 38px; font-weight: 800; letter-spacing: 8px; color: #5c35eb; }}
+    .hint {{ font-size: 12px; color: #8e8b9f; margin-top: 8px; }}
+    .footer {{ margin-top: 32px; padding-top: 20px; border-top: 1px solid #f0edf9; font-size: 12px; color: #9c99ad; text-align: center; }}
+  </style>
+</head>
+<body>
+  <div class="card">
+    <div class="logo">
+      <span class="logo-badge">F</span> FinAI
+    </div>
+    <h1>Your FinAI verification code is {otp_code}</h1>
+    <p>Thank you for choosing FinAI! Enter the 6-digit verification code below to verify your email and activate your account.</p>
+    <div class="otp-box">
+      <div class="otp-code">{otp_code}</div>
+      <div class="hint">Expires in 10 minutes &bull; Do not share this code</div>
+    </div>
+    <p style="font-size: 13px;">If you did not request this verification code, no action is needed.</p>
+    <div class="footer">
+      &copy; FinAI &bull; Intelligent Personal Finance Assistant
+    </div>
+  </div>
+</body>
+</html>"""
+
+    msg.attach(MIMEText(text_body, "plain"))
+    msg.attach(MIMEText(html_body, "html"))
+
+    try:
+        with smtplib.SMTP(Config.MAIL_SERVER, Config.MAIL_PORT, timeout=15) as server:
+            server.ehlo()
+            server.starttls()
+            server.ehlo()
+            server.login(username, password)
+            server.sendmail(username, to_email, msg.as_string())
+        print(f"[FinAI] Verification email sent to {to_email}")
+        return True
+    except Exception as e:
+        print(f"[FinAI] Failed to send email via Gmail SMTP: {e}")
+        print(f"[FinAI DEV OTP FALLBACK] Code for {to_email} is: {otp_code}")
+        return False
+
+
+def generate_and_save_otp(email: str) -> str:
+    """Generate 6-digit OTP, store only code_hash with 10-minute expiry, and send email."""
+    code = f"{secrets.randbelow(900000) + 100000}"
+    expires_at = datetime.utcnow() + timedelta(minutes=10)
+
+    # Any new code replaces old
+    EmailOTP.query.filter_by(email=email).delete()
+
+    otp_rec = EmailOTP(
+        email=email,
+        expires_at=expires_at,
+        attempts=0,
+        created_at=datetime.utcnow(),
+    )
+    otp_rec.set_code(code)
+    db.session.add(otp_rec)
+    db.session.commit()
+
+    send_otp_email(email, code)
+    return code
+
+
+# ---------------------------------------------------------------------------
 # Routes — auth
 # ---------------------------------------------------------------------------
 
@@ -222,21 +364,118 @@ def register():
             return jsonify({"error": "Enter a valid email address."}), 400
         if len(password) < 6:
             return jsonify({"error": "Password must be at least 6 characters."}), 400
-        if User.query.filter_by(email=email).first():
-            return jsonify({"error": "An account with this email already exists."}), 409
 
-        user = User(name=name[:80], email=email, is_guest=False)
-        user.set_password(password)
-        db.session.add(user)
+        existing_user = User.query.filter_by(email=email).first()
+        if existing_user:
+            if existing_user.email_verified:
+                return jsonify({"error": "An account with this email already exists."}), 409
+            else:
+                # Update info on unverified existing registration
+                existing_user.name = name[:80]
+                existing_user.set_password(password)
+        else:
+            user = User(name=name[:80], email=email, is_guest=False, email_verified=False)
+            user.set_password(password)
+            db.session.add(user)
+
         db.session.commit()
 
-        session["uid"] = user.id
-        session.permanent = True
-        return jsonify({"message": "Account created.", "user": user.to_public()}), 201
+        # Generate 6-digit OTP, store hash with 10-minute expiry, email it
+        generate_and_save_otp(email)
+
+        # Do NOT log the user in yet. Return {needs_verification: true, email}
+        return jsonify({
+            "needs_verification": True,
+            "email": email,
+            "message": f"Verification code sent to {email}.",
+        }), 201
     except Exception:
         db.session.rollback()
         traceback.print_exc()
         return jsonify({"error": "Could not create the account."}), 500
+
+
+@app.route("/api/verify-otp", methods=["POST"])
+def verify_otp():
+    try:
+        p = request.get_json(force=True) or {}
+        email = str(p.get("email", "")).strip().lower()
+        otp = str(p.get("otp", "")).strip()
+
+        if not email or not otp:
+            return jsonify({"error": "Email and 6-digit code are required."}), 400
+
+        otp_rec = EmailOTP.query.filter_by(email=email).order_by(EmailOTP.id.desc()).first()
+        if not otp_rec:
+            return jsonify({"error": "No verification code found. Please request a new code."}), 400
+
+        # Max 5 attempts
+        if otp_rec.attempts >= 5:
+            return jsonify({"error": "Too many failed attempts. Please request a new code."}), 400
+
+        # Check expiry (10-minute expiry)
+        if datetime.utcnow() > otp_rec.expires_at:
+            return jsonify({"error": "Verification code has expired. Please request a new code."}), 400
+
+        # Compare hash
+        if not otp_rec.check_code(otp):
+            otp_rec.attempts += 1
+            db.session.commit()
+            rem = max(0, 5 - otp_rec.attempts)
+            if rem == 0:
+                return jsonify({"error": "Too many failed attempts. Please request a new code."}), 400
+            return jsonify({"error": f"Invalid verification code. {rem} attempt{'s' if rem != 1 else ''} remaining."}), 400
+
+        user = User.query.filter_by(email=email).first()
+        if not user:
+            return jsonify({"error": "Account not found."}), 404
+
+        # On success set email_verified=True, delete OTP rows, log in (session uid), return user
+        user.email_verified = True
+        EmailOTP.query.filter_by(email=email).delete()
+
+        session["uid"] = user.id
+        session.permanent = True
+        LAST_ACTIVE["uid"] = user.id
+        db.session.commit()
+
+        return jsonify({"message": "Email verified successfully.", "user": user.to_public()})
+    except Exception:
+        db.session.rollback()
+        traceback.print_exc()
+        return jsonify({"error": "Could not verify code."}), 500
+
+
+@app.route("/api/resend-otp", methods=["POST"])
+def resend_otp():
+    try:
+        p = request.get_json(force=True) or {}
+        email = str(p.get("email", "")).strip().lower()
+
+        if not email:
+            return jsonify({"error": "Email is required."}), 400
+
+        user = User.query.filter_by(email=email).first()
+        if not user:
+            return jsonify({"error": "No account found with this email."}), 404
+
+        if user.email_verified:
+            return jsonify({"error": "This email is already verified. Please sign in."}), 400
+
+        # Rate limit 1 per 60 seconds
+        last_otp = EmailOTP.query.filter_by(email=email).order_by(EmailOTP.id.desc()).first()
+        if last_otp:
+            elapsed = (datetime.utcnow() - last_otp.created_at).total_seconds()
+            if elapsed < 60:
+                wait_sec = int(60 - elapsed)
+                return jsonify({"error": f"Please wait {wait_sec}s before requesting a new code."}), 429
+
+        generate_and_save_otp(email)
+        return jsonify({"message": f"A new verification code was sent to {email}."})
+    except Exception:
+        db.session.rollback()
+        traceback.print_exc()
+        return jsonify({"error": "Could not resend verification code."}), 500
 
 
 @app.route("/api/login", methods=["POST"])
@@ -247,11 +486,28 @@ def login():
         password = str(p.get("password", ""))
 
         user = User.query.filter_by(email=email).first()
-        if not user or not user.check_password(password):
+        if not user:
             return jsonify({"error": "Incorrect email or password."}), 401
+
+        # If account is Google-only (no password), return clear error
+        if user.google_id and not user.password_hash:
+            return jsonify({"error": "Use Continue with Google"}), 400
+
+        if not user.check_password(password):
+            return jsonify({"error": "Incorrect email or password."}), 401
+
+        # If email_verified is False, send a fresh OTP and return {needs_verification: true}
+        if not user.email_verified:
+            generate_and_save_otp(email)
+            return jsonify({
+                "needs_verification": True,
+                "email": user.email,
+                "message": "Please verify your email address to sign in.",
+            }), 200
 
         session["uid"] = user.id
         session.permanent = True
+        LAST_ACTIVE["uid"] = user.id
         return jsonify({"message": "Logged in.", "user": user.to_public()})
     except Exception:
         traceback.print_exc()
@@ -273,6 +529,125 @@ def me():
     if user is None or user.is_guest:
         return jsonify({"user": None})
     return jsonify({"user": user.to_public()})
+
+
+# ---------------------------------------------------------------------------
+# Routes — Google OAuth
+# ---------------------------------------------------------------------------
+
+def _frontend_url():
+    ref = request.headers.get("Referer") or request.headers.get("Origin")
+    if ref:
+        try:
+            from urllib.parse import urlparse
+            p = urlparse(ref)
+            if p.scheme and p.netloc:
+                return f"{p.scheme}://{p.netloc}"
+        except Exception:
+            pass
+    return Config.FRONTEND_URL
+
+
+@app.route("/api/auth/google")
+def auth_google():
+    front_url = _frontend_url()
+    session["oauth_frontend"] = front_url
+
+    if not Config.GOOGLE_CLIENT_ID or not Config.GOOGLE_CLIENT_SECRET:
+        err = quote("Google OAuth is not configured yet. Please add GOOGLE_CLIENT_ID and GOOGLE_CLIENT_SECRET in .env.")
+        return redirect(f"{front_url}/?error={err}")
+
+    redirect_uri = Config.GOOGLE_REDIRECT_URI or url_for("auth_google_callback", _external=True)
+    if not Config.GOOGLE_REDIRECT_URI and "localhost" in redirect_uri:
+        redirect_uri = "http://localhost:5000/api/auth/google/callback"
+
+    return oauth.google.authorize_redirect(redirect_uri)
+
+
+@app.route("/api/auth/google/callback")
+def auth_google_callback():
+    front_url = session.pop("oauth_frontend", None) or _frontend_url()
+
+    error = request.args.get("error")
+    if error:
+        desc = request.args.get("error_description", "Google sign-in was canceled.")
+        return redirect(f"{front_url}/?error={quote(desc)}")
+
+    redirect_uri = Config.GOOGLE_REDIRECT_URI or "http://localhost:5000/api/auth/google/callback"
+    user_info = None
+
+    try:
+        token = oauth.google.authorize_access_token()
+        user_info = token.get("userinfo")
+        if not user_info:
+            user_info = oauth.google.userinfo()
+    except Exception as e:
+        print(f"[FinAI] Authlib exchange note: {e}. Attempting direct token exchange...")
+        code = request.args.get("code")
+        if code:
+            try:
+                resp = requests.post(
+                    "https://oauth2.googleapis.com/token",
+                    data={
+                        "client_id": Config.GOOGLE_CLIENT_ID,
+                        "client_secret": Config.GOOGLE_CLIENT_SECRET,
+                        "code": code,
+                        "grant_type": "authorization_code",
+                        "redirect_uri": redirect_uri,
+                    },
+                    timeout=10,
+                )
+                tdata = resp.json()
+                acc_tok = tdata.get("access_token")
+                if acc_tok:
+                    uresp = requests.get(
+                        "https://openidconnect.googleapis.com/v1/userinfo",
+                        headers={"Authorization": f"Bearer {acc_tok}"},
+                        timeout=10,
+                    )
+                    user_info = uresp.json()
+            except Exception as ex:
+                print(f"[FinAI] Direct token exchange failed: {ex}")
+
+    if not user_info or not user_info.get("email"):
+        return redirect(f"{front_url}/?error={quote('Could not retrieve account info from Google.')}")
+
+    google_id = user_info.get("sub")
+    email = str(user_info.get("email", "")).strip().lower()
+    name = user_info.get("name") or email.split("@")[0]
+    picture = user_info.get("picture")
+
+    try:
+        # If a user with that email exists, link google_id and set email_verified=True; else create a new user
+        user = User.query.filter((User.google_id == google_id) | (User.email == email)).first()
+        if user:
+            user.google_id = google_id
+            user.email_verified = True
+            if picture:
+                user.avatar_url = picture
+            if not user.name or user.name == "Guest":
+                user.name = name[:80]
+        else:
+            user = User(
+                name=name[:80],
+                email=email,
+                google_id=google_id,
+                avatar_url=picture,
+                email_verified=True,  # Google users skip OTP because Google already verified email
+                is_guest=False,
+            )
+            db.session.add(user)
+
+        db.session.commit()
+        session["uid"] = user.id
+        session.permanent = True
+        LAST_ACTIVE["uid"] = user.id
+
+        return redirect(f"{front_url}/?login=google")
+    except Exception as e:
+        db.session.rollback()
+        traceback.print_exc()
+        return redirect(f"{front_url}/?error={quote('Database error during Google sign-in.')}")
 
 
 # ---------------------------------------------------------------------------
