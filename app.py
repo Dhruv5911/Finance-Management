@@ -3,6 +3,7 @@ FinAI — Intelligent Personal Finance Assistant
 Flask backend: API routes, SQLite storage, auth, and wiring together the agent, tools, and RAG engine.
 """
 import os
+import json
 import traceback
 import smtplib
 import secrets
@@ -909,6 +910,73 @@ def budget_status():
         db.session.rollback()
         traceback.print_exc()
         return jsonify({"error": "Could not calculate budget status."}), 500
+
+
+@app.route("/api/budget-insights", methods=["POST"])
+def budget_insights():
+    """Gemini explains the user's budget in plain language.
+    The frontend sends this month's numbers; Gemini only explains them (it never invents figures).
+    Falls back to simple rules if Gemini is not configured or fails."""
+    try:
+        p = request.get_json(force=True) or {}
+        spent = {k: float(v) for k, v in (p.get("spent") or {}).items()}
+        budgets = {k: float(v) for k, v in (p.get("budgets") or {}).items() if float(v) > 0}
+        income = float(p.get("income") or 0)
+        days_left = int(p.get("days_left") or 0)
+        month = str(p.get("month") or "this month")
+        if not spent and not budgets:
+            return jsonify({"error": "Add some transactions or budgets first."}), 400
+
+        total_spent = sum(spent.values())
+        facts = {
+            "month": month, "days_left": days_left, "income": income,
+            "total_spent": round(total_spent, 2),
+            "categories": [
+                {"category": c, "spent": round(spent.get(c, 0), 2), "budget": budgets.get(c),
+                 "percent_used": round(spent.get(c, 0) / budgets[c] * 100, 1) if budgets.get(c) else None}
+                for c in sorted(set(spent) | set(budgets))
+            ],
+        }
+
+        if gemini_client:
+            try:
+                from google.genai import types
+                prompt = (
+                    "You are FinAI, a friendly personal finance coach for a student in India (amounts in rupees). "
+                    "Use ONLY the numbers in the FACTS below; never invent figures. Write in simple everyday English.\n"
+                    "Return JSON with keys: summary (2 short sentences), actions (3-5 short, specific tips, "
+                    "each says what to do and roughly how much it saves), plan (object with needs, wants, savings: "
+                    "suggested monthly rupee amounts that add up to income if income > 0, else empty object), "
+                    "health (one of: good, watch, risk).\n\nFACTS:\n" + json.dumps(facts, indent=2)
+                )
+                resp = gemini_client.models.generate_content(
+                    model=Config.GEMINI_MODEL, contents=prompt,
+                    config=types.GenerateContentConfig(response_mime_type="application/json"),
+                )
+                data = json.loads(resp.text)
+                data["source"] = "gemini"
+                return jsonify(data)
+            except Exception:
+                traceback.print_exc()  # fall through to the rule-based answer
+
+        # ---- fallback: simple rules (no AI) ----
+        actions = []
+        for c in facts["categories"]:
+            if c["budget"] and c["spent"] > c["budget"]:
+                actions.append(f"Cut {c['category']} by about Rs {c['spent'] - c['budget']:,.0f} to get back on budget.")
+        if total_spent and spent:
+            top = max(spent, key=spent.get)
+            actions.append(f"{top} is your biggest cost (Rs {spent[top]:,.0f}). Even a 10% cut saves Rs {spent[top] * 0.1:,.0f}.")
+        if income:
+            actions.append(f"Aim to save 20% of income, about Rs {income * 0.2:,.0f} per month.")
+        plan = {"needs": round(income * 0.5), "wants": round(income * 0.3), "savings": round(income * 0.2)} if income else {}
+        over = any(c["budget"] and c["spent"] > c["budget"] for c in facts["categories"])
+        return jsonify({"source": "rules", "health": "watch" if over else "good",
+                        "summary": f"You spent Rs {total_spent:,.0f} in {month}." + (" Some categories are over budget." if over else " You are within your budgets."),
+                        "actions": actions[:5], "plan": plan})
+    except Exception:
+        traceback.print_exc()
+        return jsonify({"error": "Could not generate insights."}), 500
 
 
 @app.route("/api/goal", methods=["POST"])

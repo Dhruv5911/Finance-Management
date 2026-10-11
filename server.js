@@ -1064,6 +1064,7 @@ app.get('/api/status', (req, res) => forwardToFlask(req, res, '/api/status', 'GE
 app.get('/api/alerts', (req, res) => forwardToFlask(req, res, '/api/alerts', 'GET'));
 app.post('/api/alerts/dismiss', (req, res) => forwardToFlask(req, res, '/api/alerts/dismiss', 'POST'));
 app.post('/api/goal', (req, res) => forwardToFlask(req, res, '/api/goal', 'POST'));
+app.post('/api/budget-insights', (req, res) => forwardToFlask(req, res, '/api/budget-insights', 'POST'));
 
 // ---------------------------------------------------------------------------
 // Start Server
