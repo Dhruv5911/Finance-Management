@@ -1,6 +1,7 @@
 import React, { useState } from 'react'
-import { Pencil, Trash2, Plus, Upload } from 'lucide-react'
+import { Pencil, Trash2, Plus, Upload, Camera } from 'lucide-react'
 import { useApp } from '../App'
+import ReceiptScanModal from '../components/ReceiptScanModal'
 
 function fmt(v) { return '₹' + (Number(v) || 0).toLocaleString('en-IN', { maximumFractionDigits: 2 }) }
 
@@ -8,6 +9,7 @@ const today = () => new Date().toISOString().split('T')[0]
 
 export default function Transactions() {
   const { transactions, refreshData, addToast, setUploadOpen } = useApp()
+  const [receiptModalOpen, setReceiptModalOpen] = useState(false)
   const [search, setSearch] = useState('')
   const [catFilter, setCatFilter] = useState('')
   const [typeFilter, setTypeFilter] = useState('')
@@ -102,7 +104,12 @@ export default function Transactions() {
           <p>Search, filter, add, edit, and delete your financial records.</p>
         </div>
         <div className="view-header-actions">
-          <button className="btn-ghost" onClick={() => setUploadOpen(true)}><Upload size={14} style={{ marginRight: 6, verticalAlign: 'middle' }} />Upload CSV</button>
+          <button className="btn-ghost" onClick={() => setReceiptModalOpen(true)} style={{ color: '#7b5cff', borderColor: 'rgba(123, 92, 255, 0.3)' }}>
+            <Camera size={14} style={{ marginRight: 6, verticalAlign: 'middle' }} />Scan Receipt (AI)
+          </button>
+          <button className="btn-ghost" onClick={() => setUploadOpen(true)}>
+            <Upload size={14} style={{ marginRight: 6, verticalAlign: 'middle' }} />Upload CSV / Bank Statement
+          </button>
         </div>
       </div>
 
@@ -188,6 +195,7 @@ export default function Transactions() {
           </table>
         </div>
       </div>
+      {receiptModalOpen && <ReceiptScanModal onClose={() => setReceiptModalOpen(false)} />}
     </div>
   )
 }

@@ -103,6 +103,9 @@ export default function App() {
       .then(d => {
         if (d?.user) {
           setUser(d.user)
+          if (d.user.token) {
+            localStorage.setItem('finai_token', d.user.token)
+          }
           setScreen('app')
           if (isGoogleLogin) {
             addToast(`Welcome back, ${d.user.name}!`, 'success')
@@ -119,6 +122,7 @@ export default function App() {
 
   const logout = useCallback(async () => {
     try { await fetch('/api/logout', { method: 'POST' }) } catch {}
+    localStorage.removeItem('finai_token')
     setUser(null)
     setSummary({}); setTransactions([]); setCategories({}); setMonthly([])
     setDataSource('empty')

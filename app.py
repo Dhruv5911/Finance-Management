@@ -128,7 +128,16 @@ def _current_user(create: bool = True):
     exists yet, return None (callers show empty data) instead of inserting a new
     guest row on every page load. Guests are only created when data is saved.
     """
-    uid = session.get("uid")
+    uid_hdr = request.headers.get("X-User-Id")
+    uid = None
+    if uid_hdr:
+        try:
+            uid = int(uid_hdr)
+        except (ValueError, TypeError):
+            pass
+    if uid is None:
+        uid = session.get("uid")
+
     user = db.session.get(User, uid) if uid else None
     if user is None and create:
         user = User(name="Guest", is_guest=True)

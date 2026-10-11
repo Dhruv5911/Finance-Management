@@ -75,38 +75,38 @@ FinAI includes a safe automatic SQLite migration on startup that checks existing
 
 ## 4. How to Run the App (Windows PowerShell)
 
-### Terminal 1: Backend (Flask on Port 5000)
+FinAI runs as a modern microservices architecture:
+1. **Node.js Express Backend (Port 5000)**: Handles all REST API routes, Auth, Email OTP, Google OAuth, and SQLite data operations.
+2. **Python Flask AI Microservice (Port 5001)**: Powers the Gemini AI assistant, Knowledge Base RAG engine, and autonomous background monitor.
+3. **React + Vite Frontend (Port 5173)**: User interface with automatic proxy to the Node.js API gateway.
+
+### Terminal 1: Node.js Backend & Auth Gateway (Port 5000)
 
 ```powershell
-# Navigate to the project root
-cd E:\FInance
+# In the project root (E:\FInance)
+npm start
+```
+Starts the primary API server at `http://localhost:5000`.
 
-# Activate virtual environment if using one (optional):
-# .\.venv\Scripts\Activate.ps1
+### Terminal 2: Python Flask AI Service (Port 5001)
 
-# Install required Python packages
-pip install -r requirements.txt
-
-# Run the Flask backend
+```powershell
+# In the project root (E:\FInance)
 python run.py
 ```
+Starts the AI & RAG microservice at `http://127.0.0.1:5001`.
 
-The backend starts on `http://localhost:5000`.
-
-### Terminal 2: Frontend (Vite on Port 5173)
+### Terminal 3: React + Vite Frontend (Port 5173)
 
 ```powershell
 # Navigate to the frontend directory
 cd E:\FInance\frontend
 
-# Install dependencies if not already installed
-npm.cmd install
-
 # Start the Vite development server
 npm.cmd run dev
 ```
 
-The frontend will be available at `http://localhost:5173`. Any requests to `/api/*` are automatically proxied to `http://localhost:5000`.
+The frontend will be available at `http://localhost:5173`. Any requests to `/api/*` are automatically handled by the Node.js backend.
 
 ---
 

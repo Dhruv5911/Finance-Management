@@ -86,6 +86,9 @@ export default function AuthScreen() {
       }
 
       setUser(data.user)
+      if (data.user?.token) {
+        localStorage.setItem('finai_token', data.user.token)
+      }
       addToast(`Welcome back, ${data.user.name}!`, 'success')
       setScreen('app')
     } catch {
@@ -151,6 +154,9 @@ export default function AuthScreen() {
       }
 
       setUser(data.user)
+      if (data.user?.token) {
+        localStorage.setItem('finai_token', data.user.token)
+      }
       addToast(`Welcome, ${data.user.name}!`, 'success')
       setScreen('app')
     } catch {
