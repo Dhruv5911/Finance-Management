@@ -6,3 +6,4 @@ uploads/*
 !uploads/.gitkeep
 node_modules/
 frontend/dist/
+finai.db

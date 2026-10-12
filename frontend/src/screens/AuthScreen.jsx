@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from 'react'
 import { Mail, Lock, Eye, EyeOff, User, ArrowLeft, ShieldCheck, KeyRound } from 'lucide-react'
 import { useApp } from '../App'
 import '../auth.css'
+import AuthVisual from './AuthVisual'
 
 export default function AuthScreen() {
   const { setScreen, setUser, addToast } = useApp()
@@ -207,54 +208,7 @@ export default function AuthScreen() {
   return (
     <div className="au-page">
       {/* ---------- Visual panel ---------- */}
-      <section className="au-visual">
-        <div className="au-blob b1" /><div className="au-blob b2" /><div className="au-blob b3" />
-
-        <div className="au-brand">
-          <span className="au-brand-logo">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.8" strokeLinecap="round" strokeLinejoin="round"><path d="M4 17l5-5 4 4 7-8" /><path d="M15 8h5v5" /></svg>
-          </span>
-          FinAI
-        </div>
-
-        <h2 className="au-headline">Smart money,<br /><span>made simple.</span></h2>
-
-        <div className="au-stage" aria-hidden="true">
-          <div className="au-glass au-balance">
-            <div className="au-row"><small>Total Balance</small><em className="au-up">▲ 12.4%</em></div>
-            <strong>₹1,24,580</strong>
-            <svg viewBox="0 0 200 54" preserveAspectRatio="none">
-              <defs><linearGradient id="spark" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stopColor="#7b5cff" stopOpacity=".35" /><stop offset="1" stopColor="#7b5cff" stopOpacity="0" /></linearGradient></defs>
-              <path d="M0 44 C20 40 28 18 50 26 S84 46 106 30 S146 6 170 14 S190 8 200 4 L200 54 L0 54Z" fill="url(#spark)" />
-              <path d="M0 44 C20 40 28 18 50 26 S84 46 106 30 S146 6 170 14 S190 8 200 4" fill="none" stroke="#7b5cff" strokeWidth="2.5" strokeLinecap="round" />
-            </svg>
-          </div>
-
-          <div className="au-card3d">
-            <span className="au-chip" />
-            <div><small>FinAI Platinum</small><b>₹ 84,635.00</b></div>
-            <i>•••• •••• •••• 8824</i>
-          </div>
-
-          <div className="au-glass au-goal">
-            <div className="au-ring"><b>68%</b></div>
-            <div><small>Savings goal</small><strong>₹68k / ₹1L</strong></div>
-          </div>
-
-          <div className="au-glass au-spend">
-            <small>Top spending</small>
-            <div className="au-bars"><i style={{ '--h': '58%' }} /><i style={{ '--h': '88%' }} /><i style={{ '--h': '42%' }} /><i style={{ '--h': '70%' }} /><i style={{ '--h': '34%' }} /></div>
-          </div>
-
-          <span className="au-coin c1">₹</span>
-          <span className="au-coin c2">₹</span>
-        </div>
-
-        <div className="au-copy">
-          <h3>Intelligent Finance Assistance</h3>
-          <p>Track every rupee, set smarter budgets and chat with an AI that answers from your own numbers.</p>
-        </div>
-      </section>
+      <AuthVisual />
 
       {/* ---------- Right: card section ---------- */}
       <section className="au-side">

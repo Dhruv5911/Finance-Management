@@ -896,6 +896,110 @@ Respond ONLY with a valid JSON object matching the schema above.`;
 });
 
 // ---------------------------------------------------------------------------
+// Bank statement text -> transactions (works with pdf-parse output where one
+// transaction may be split over several lines, or sit on a single line)
+// ---------------------------------------------------------------------------
+const MONTHS = { jan: 1, feb: 2, mar: 3, apr: 4, may: 5, jun: 6, jul: 7, aug: 8, sep: 9, oct: 10, nov: 11, dec: 12 };
+const DATE_SRC = '(?:\\d{1,2}[-/.]\\d{1,2}[-/.]\\d{4}|\\d{1,2}\\s+(?:Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)[a-z]*\\.?\\s+\\d{4}|\\d{4}[-/.]\\d{1,2}[-/.]\\d{1,2})';
+const DATE_AT_START = new RegExp('^\\s*(' + DATE_SRC + ')', 'i');
+const DATE_ANY = new RegExp(DATE_SRC, 'gi');
+const AMOUNT_RE = /\d+(?:,\d{2,3})*\.\d{2}/g;
+
+function pad2(n) { return String(n).padStart(2, '0'); }
+
+// Indian statements are day-first (05-09-2026 = 5 Sep). Returns YYYY-MM-DD without timezone shifts.
+function toIsoDate(raw) {
+  let m = raw.match(/^(\d{4})[-/.](\d{1,2})[-/.](\d{1,2})$/);
+  if (m) return `${m[1]}-${pad2(m[2])}-${pad2(m[3])}`;
+  m = raw.match(/^(\d{1,2})[-/.](\d{1,2})[-/.](\d{4})$/);
+  if (m) return `${m[3]}-${pad2(m[2])}-${pad2(m[1])}`;
+  m = raw.match(/^(\d{1,2})\s+([A-Za-z]{3})[a-z]*\.?\s+(\d{4})$/);
+  if (m && MONTHS[m[2].toLowerCase()]) return `${m[3]}-${pad2(MONTHS[m[2].toLowerCase()])}-${pad2(m[1])}`;
+  return null;
+}
+
+function categorize(desc, type) {
+  const l = desc.toLowerCase();
+  if (type === 'income') return /salary/.test(l) ? 'Salary' : 'Income';
+  if (/swiggy|zomato|eats|cafe|restaurant|mcdonald|dominos|chai|food/.test(l)) return 'Food & Dining';
+  if (/bigbasket|dmart|grocer|supermarket|fresh mart|blinkit|zepto/.test(l)) return 'Groceries';
+  if (/uber|\bola\b|metro|fuel|petrol|irctc|transport|rapido/.test(l)) return 'Transportation';
+  if (/amazon|flipkart|myntra|shopping/.test(l)) return 'Shopping';
+  if (/netflix|spotify|hotstar|prime|cinema|pvr|bookmyshow/.test(l)) return 'Entertainment';
+  if (/hospital|pharmacy|medical|clinic|apollo/.test(l)) return 'Health';
+  if (/airtel|jio|electric|bescom|\bbill|water|recharge/.test(l)) return 'Utilities';
+  if (/\brent\b|landlord/.test(l)) return 'Rent';
+  if (/\bsip\b|mutual fund|investment/.test(l)) return 'Investment';
+  if (/atm|cash/.test(l)) return 'Cash';
+  return 'General Expense';
+}
+
+function cleanDescription(text) {
+  const tokens = text
+    .replace(/\d{6,}/g, ' ')                 // long reference numbers
+    .split(/[\/|]+/)
+    .map(t => t.trim())
+    .filter(t => t && !/^(UPI|DR|CR|NEFT|IMPS|RTGS|POS|ACH|ATM|WDL|BILLPAY|INT\.?PD|ECS|NACH)$/i.test(t));
+  return tokens.join(' ').replace(/\s+/g, ' ').trim();
+}
+
+function parseStatementText(text) {
+  const lines = String(text || '').split(/\r?\n/).map(l => l.trim()).filter(Boolean);
+
+  // 1. group lines into records: a record starts at a line beginning with a date
+  const records = [];
+  let cur = null;
+  for (const line of lines) {
+    if (DATE_AT_START.test(line)) {
+      cur = { text: line };
+      records.push(cur);
+    } else if (/^(closing balance|total\b|page\s+\d|statement\b|opening balance|demo statement|this is a computer)/i.test(line)) {
+      cur = null;                            // footer / summary lines end the record
+    } else if (cur) {
+      cur.text += ' ' + line;
+    }
+  }
+
+  // 2. turn each record into a transaction
+  const out = [];
+  let prevBalance = null;
+  for (const rec of records) {
+    const first = rec.text.match(DATE_AT_START);
+    const date = toIsoDate(first[1].replace(/\s+/g, ' ').trim());
+    if (!date) continue;
+
+    const body = rec.text.replace(DATE_ANY, ' ');
+    const amounts = (body.match(AMOUNT_RE) || []).map(a => parseFloat(a.replace(/,/g, '')));
+    const isOpening = /opening balance|balance b\/f|brought forward/i.test(body);
+
+    if (isOpening) { if (amounts.length) prevBalance = amounts[amounts.length - 1]; continue; }
+    if (!amounts.length) continue;
+
+    const desc = cleanDescription(body.replace(AMOUNT_RE, ' ')) || `Bank Transaction (${date})`;
+    let amount, balance = null;
+    if (amounts.length >= 2) {
+      balance = amounts[amounts.length - 1];
+      const candidates = amounts.slice(0, -1).filter(a => a > 0);
+      amount = candidates.length ? candidates[0] : amounts[0];
+    } else {
+      amount = amounts[0];
+    }
+    if (!(amount > 0)) continue;
+
+    let type;
+    if (balance !== null && prevBalance !== null && Math.abs(balance - prevBalance) > 0.004) {
+      type = balance > prevBalance ? 'income' : 'expense';   // balance went up = money in
+    } else {
+      type = /\b(cr|credit|salary|deposit|interest|refund|received)\b/i.test(body.replace(/[\/_]/g, ' ')) ? 'income' : 'expense';
+    }
+    if (balance !== null) prevBalance = balance;
+
+    out.push({ date, description: desc.slice(0, 120), category: categorize(desc, type), type, amount });
+  }
+  return out;
+}
+
+// ---------------------------------------------------------------------------
 // Bank Statement PDF Parser
 // ---------------------------------------------------------------------------
 app.post('/api/upload-pdf-statement', upload.single('statement'), async (req, res) => {
@@ -906,90 +1010,23 @@ app.post('/api/upload-pdf-statement', upload.single('statement'), async (req, re
 
   try {
     const fileBuffer = fs.readFileSync(req.file.path);
-    const pdfData = await pdfParse(fileBuffer);
-    const text = pdfData.text;
+    let text = '';
+    try {
+      const pdfData = await pdfParse(fileBuffer);
+      text = pdfData.text;
+    } catch (e) {
+      console.error('pdf-parse could not read the file:', e.message);
+      return res.status(400).json({ error: 'This PDF could not be read (the file looks damaged). Try opening it and saving or printing it as a new PDF, then upload again.' });
+    }
 
     if (!text || text.trim().length === 0) {
       return res.status(400).json({ error: 'Could not extract text from PDF. The file may be password-protected or an image-only scan.' });
     }
 
-    const lines = text.split(/\r?\n/).map(l => l.trim()).filter(l => l.length > 0);
-    const parsedTransactions = [];
-
-    // Regex for statement dates (DD/MM/YYYY, DD-MM-YYYY, DD Mon YYYY, YYYY-MM-DD)
-    const dateRegex = /\b(\d{1,2}[-/\.]\d{1,2}[-/\.]\d{2,4}|\d{1,2}\s+(?:Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)[a-z]*\s+\d{2,4}|\d{4}[-/\.]\d{1,2}[-/\.]\d{1,2})\b/i;
-    // Regex for amounts (e.g. 1,250.00, 450.50, 25000)
-    const amountRegex = /\b(\d{1,3}(?:,\d{2,3})*(?:\.\d{1,2})?)\b/g;
-
-    for (const line of lines) {
-      const dateMatch = line.match(dateRegex);
-      if (!dateMatch) continue;
-
-      const rawDate = dateMatch[0];
-      let cleanDate = new Date().toISOString().split('T')[0];
-      try {
-        const parsedD = new Date(rawDate);
-        if (!isNaN(parsedD.getTime())) {
-          cleanDate = parsedD.toISOString().split('T')[0];
-        }
-      } catch {}
-
-      // Collect amounts
-      const amounts = [];
-      let m;
-      while ((m = amountRegex.exec(line)) !== null) {
-        const val = parseFloat(m[1].replace(/,/g, ''));
-        if (!isNaN(val) && val > 0 && val < 50000000) {
-          amounts.push(val);
-        }
-      }
-
-      if (amounts.length === 0) continue;
-
-      let desc = line.replace(rawDate, '').trim();
-      const lower = line.toLowerCase();
-
-      let type = 'expense';
-      if (lower.includes('cr') || lower.includes('credit') || lower.includes('deposit') || lower.includes('salary')) {
-        type = 'income';
-      }
-
-      const amount = amounts[0];
-
-      // Auto-categorize based on bank narration keywords
-      let category = 'Other';
-      if (type === 'income') {
-        category = lower.includes('salary') ? 'Salary' : 'Investment';
-      } else if (lower.includes('swiggy') || lower.includes('zomato') || lower.includes('eats') || lower.includes('cafe') || lower.includes('restaurant') || lower.includes('mcdonald')) {
-        category = 'Food & Dining';
-      } else if (lower.includes('uber') || lower.includes('ola') || lower.includes('metro') || lower.includes('fuel') || lower.includes('petrol') || lower.includes('transport')) {
-        category = 'Transportation';
-      } else if (lower.includes('amazon') || lower.includes('flipkart') || lower.includes('myntra') || lower.includes('shopping')) {
-        category = 'Shopping';
-      } else if (lower.includes('netflix') || lower.includes('spotify') || lower.includes('hotstar') || lower.includes('prime') || lower.includes('cinema')) {
-        category = 'Entertainment';
-      } else if (lower.includes('hospital') || lower.includes('pharmacy') || lower.includes('medical') || lower.includes('clinic')) {
-        category = 'Health';
-      } else if (lower.includes('airtel') || lower.includes('jio') || lower.includes('electric') || lower.includes('bill') || lower.includes('water')) {
-        category = 'Utilities';
-      } else {
-        category = 'General Expense';
-      }
-
-      desc = desc.replace(/[0-9,\.\/\\-]{6,}/g, ' ').replace(/\s+/g, ' ').trim();
-      if (!desc || desc.length < 3) desc = `Bank Transaction (${rawDate})`;
-
-      parsedTransactions.push({
-        date: cleanDate,
-        description: desc.slice(0, 120),
-        category,
-        type,
-        amount,
-      });
-    }
+    const parsedTransactions = parseStatementText(text);
 
     if (parsedTransactions.length === 0) {
-      return res.status(400).json({ error: 'No transaction rows could be automatically parsed. Please ensure the statement is text-based.' });
+      return res.status(400).json({ error: 'No transactions were found. The statement needs rows that start with a date and show amounts (a text PDF, not a scanned photo).' });
     }
 
     const insertTxn = db.prepare(`
