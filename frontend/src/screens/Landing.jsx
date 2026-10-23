@@ -1,5 +1,5 @@
 import React, { useRef } from 'react'
-import { ArrowRight, ScanSearch, Sparkles, CalendarCheck2, BarChart2, Wallet, Calculator, MessageCircle, Lock, ShieldCheck, KeyRound } from 'lucide-react'
+import { ArrowRight, ScanSearch, Sparkles, CalendarCheck2, BarChart2, Wallet, Calculator, MessageCircle, Lock, ShieldCheck, KeyRound, TrendingUp, PieChart } from 'lucide-react'
 import { useApp } from '../App'
 import useCountUp from '../useCountUp'
 import '../landing.css'
@@ -43,12 +43,23 @@ export default function Landing() {
     const r = el.getBoundingClientRect()
     const x = (e.clientX - r.left) / r.width - 0.5
     const y = (e.clientY - r.top) / r.height - 0.5
-    el.style.setProperty('--tx', (x * 8).toFixed(2) + 'deg')
-    el.style.setProperty('--ty', (-y * 8).toFixed(2) + 'deg')
+    el.style.setProperty('--tx', (-y * 13).toFixed(2) + 'deg')
+    el.style.setProperty('--ty', (x * 16).toFixed(2) + 'deg')
+    el.style.setProperty('--mx', (x * 28).toFixed(2) + 'px')
+    el.style.setProperty('--my', (y * 22).toFixed(2) + 'px')
+  }
+
+  const onLeave = () => {
+    const el = stageRef.current
+    if (!el) return
+    el.style.setProperty('--tx', '0deg')
+    el.style.setProperty('--ty', '0deg')
+    el.style.setProperty('--mx', '0px')
+    el.style.setProperty('--my', '0px')
   }
 
   return (
-    <div className="lp" onMouseMove={onMove}>
+    <div className="lp" onMouseMove={onMove} onMouseLeave={onLeave}>
       <nav className="lp-nav">
         <span className="lp-brand">Fin<em>AI</em></span>
         <div className="lp-links">
@@ -77,6 +88,11 @@ export default function Landing() {
             </span>
           </h1>
           <p className="lp-sub">Our AI reads your spending and shows what can be improved.</p>
+          <div className="lp-pills" aria-label="Finance highlights">
+            <span><TrendingUp size={14} /> Savings trends</span>
+            <span><PieChart size={14} /> Category clarity</span>
+            <span><ShieldCheck size={14} /> Private account</span>
+          </div>
           <div className="lp-cta">
             <button className="lp-btn-dark lg" onClick={() => setScreen('auth')}>Get Started Free <ArrowRight size={16} /></button>
             <button className="lp-btn-soft lg" onClick={() => setScreen('app')}>Skip login & launch</button>
@@ -90,6 +106,8 @@ export default function Landing() {
         {/* ---------- 3D coin ---------- */}
         <section className="lp-stage" ref={stageRef} aria-hidden="true">
           <div className="lp-glow" />
+          <div className="lp-orbit orbit-a" />
+          <div className="lp-orbit orbit-b" />
           <div className="lp-tilt">
             <div className="lp-float">
               <div className="lp-coin">
@@ -112,6 +130,8 @@ export default function Landing() {
           <div className="lp-frame f1"><u /><em>Income</em></div>
           <div className="lp-frame f2"><u /><em>Savings 24%</em></div>
           <div className="lp-frame f3"><u /><em>Risk: Low</em></div>
+          <div className="lp-metric-card mc1"><small>Cashflow</small><b>+18%</b></div>
+          <div className="lp-metric-card mc2"><small>Budget</small><b>On track</b></div>
         </section>
 
         {/* ---------- Stats ---------- */}
@@ -139,7 +159,7 @@ export default function Landing() {
         <div>
           <span className="lp-tag"><MessageCircle size={13} /> AI Assistant</span>
           <h2>Ask your money <span>anything.</span></h2>
-          <p className="lp-lead">Chat with FinAI in plain words. It calculates from your own transactions and explains the answer in simple language — no guessing.</p>
+          <p className="lp-lead">Chat with FinAI in plain words. It calculates from your own transactions and explains the answer in simple language, no guessing.</p>
           <button className="lp-btn-dark lg" onClick={() => setScreen('auth')}>Try it free <ArrowRight size={16} /></button>
         </div>
         <div className="lp-chat">

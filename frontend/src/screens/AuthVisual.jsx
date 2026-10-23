@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { useRef } from 'react'
 import { ScanSearch, Sparkles, CalendarCheck2 } from 'lucide-react'
 import '../authvisual.css'
 
@@ -6,8 +6,31 @@ const WORD = 'potential'
 
 /** Right-hand visual of the login page — same look as the landing page (3D rotating coin). */
 export default function AuthVisual() {
+  const stageRef = useRef(null)
+
+  const onMove = (e) => {
+    const el = stageRef.current
+    if (!el || window.matchMedia('(pointer: coarse)').matches) return
+    const r = el.getBoundingClientRect()
+    const x = (e.clientX - r.left) / r.width - 0.5
+    const y = (e.clientY - r.top) / r.height - 0.5
+    el.style.setProperty('--tx', (-y * 13).toFixed(2) + 'deg')
+    el.style.setProperty('--ty', (x * 16).toFixed(2) + 'deg')
+    el.style.setProperty('--mx', (x * 24).toFixed(2) + 'px')
+    el.style.setProperty('--my', (y * 20).toFixed(2) + 'px')
+  }
+
+  const onLeave = () => {
+    const el = stageRef.current
+    if (!el) return
+    el.style.setProperty('--tx', '0deg')
+    el.style.setProperty('--ty', '0deg')
+    el.style.setProperty('--mx', '0px')
+    el.style.setProperty('--my', '0px')
+  }
+
   return (
-    <section className="au-visual av" aria-label="FinAI">
+    <section className="au-visual av" aria-label="FinAI" onMouseMove={onMove} onMouseLeave={onLeave}>
       <div className="av-watermark" aria-hidden="true">FINANCE</div>
 
       <div className="av-brand">Fin<em>AI</em></div>
@@ -20,15 +43,19 @@ export default function AuthVisual() {
         </span>
       </h2>
 
-      <div className="av-stage" aria-hidden="true">
+      <div className="av-stage" ref={stageRef} aria-hidden="true">
         <div className="av-glow" />
-        <div className="av-float">
-          <div className="av-coin">
-            <div className="av-face front"><span>₹</span></div>
-            {Array.from({ length: 22 }, (_, i) => <div key={i} className="av-edge" style={{ '--i': i }} />)}
-            <div className="av-face back"><span>₹</span></div>
+        <div className="av-orbit orbit-a" />
+        <div className="av-orbit orbit-b" />
+        <div className="av-tilt">
+          <div className="av-float">
+            <div className="av-coin">
+              <div className="av-face front"><span>₹</span></div>
+              {Array.from({ length: 22 }, (_, i) => <div key={i} className="av-edge" style={{ '--i': i }} />)}
+              <div className="av-face back"><span>₹</span></div>
+            </div>
+            <div className="av-scan" />
           </div>
-          <div className="av-scan" />
         </div>
         <div className="av-shadow" />
         <span className="av-mini m1">₹</span>
@@ -38,6 +65,8 @@ export default function AuthVisual() {
         <div className="av-frame f1"><u /><em>Income</em></div>
         <div className="av-frame f2"><u /><em>Savings 24%</em></div>
         <div className="av-frame f3"><u /><em>Risk: Low</em></div>
+        <div className="av-metric-card mc1"><small>Monthly</small><b>+12%</b></div>
+        <div className="av-metric-card mc2"><small>AI scan</small><b>Ready</b></div>
       </div>
 
       <div className="av-chips">

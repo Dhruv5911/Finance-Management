@@ -1,26 +1,28 @@
 /* Login page — matches the landing page (white, ink + orange, 3D coin). Load AFTER auth.css. */
 :root .au-page {
-  --ink: #17142b; --acc: #f2571d;
+  --ink: #17142b; --acc: #f2571d; --blue: #1e8bc3;
   --text-primary: #17142b; --text-secondary: #58556f; --text-muted: #8a869c;
   --bg-card: #fff; --bg-tile: #f6f5fb; --border: rgba(23,20,43,.09);
   color-scheme: light; color: #17142b;
   background:
     radial-gradient(620px 460px at 70% 46%, rgba(165,139,255,.24), transparent 70%),
+    radial-gradient(500px 360px at 12% 10%, rgba(30,139,195,.12), transparent 70%),
     radial-gradient(420px 320px at 12% 96%, rgba(255,170,120,.2), transparent 70%),
     #fff;
 }
 .au-page .au-card, .au-page .au-strip {
   background: #fff; backdrop-filter: none; -webkit-backdrop-filter: none;
   border: 1px solid rgba(23,20,43,.07); box-shadow: 0 24px 60px rgba(23,20,43,.07);
+  border-radius: 8px;
 }
 .au-page .au-card h1 { color: #17142b; }
 .au-page .au-input { background: #f6f5fb; }
 .au-page .au-input:focus-within { background: #fff; border-color: #17142b; box-shadow: 0 0 0 4px rgba(23,20,43,.08); color: #17142b; }
-.au-page .au-submit { background: #17142b; box-shadow: 0 14px 30px rgba(23,20,43,.2); }
+.au-page .au-submit { background: linear-gradient(135deg, #17142b, #332d58); box-shadow: 0 14px 30px rgba(23,20,43,.2); border-radius: 8px; }
 .au-page .au-submit:hover:not(:disabled) { background: #f2571d; box-shadow: 0 16px 34px rgba(242,87,29,.32); }
-.au-page .au-guest { background: rgba(23,20,43,.06); }
+.au-page .au-guest { background: rgba(23,20,43,.06); border-radius: 8px; }
 .au-page .au-guest:hover { background: rgba(242,87,29,.1); color: #f2571d; }
-.au-page .au-goback, .au-page .au-back { background: rgba(23,20,43,.06); }
+.au-page .au-goback, .au-page .au-back { background: rgba(23,20,43,.06); border-radius: 8px; }
 .au-page .au-switch a { color: #17142b; } .au-page .au-switch a:hover { color: #f2571d; }
 
 /* ---------- visual panel ---------- */
@@ -35,8 +37,11 @@
 .av-word span { display: inline-block; animation: avLetter .9s cubic-bezier(.22,1,.36,1) backwards; animation-delay: calc(450ms + var(--i) * 70ms); }
 
 /* ---------- 3D coin ---------- */
-.av-stage { --size: clamp(130px, min(20vw, 34vh), 300px); position: relative; z-index: 1; flex: 1; min-height: 0; width: 100%; display: flex; align-items: center; justify-content: center; perspective: 1100px; animation: avPop 1s cubic-bezier(.22,1,.36,1) .2s backwards; }
+.av-stage { --size: clamp(130px, min(20vw, 34vh), 300px); --tx: 0deg; --ty: 0deg; --mx: 0px; --my: 0px; position: relative; z-index: 1; flex: 1; min-height: 0; width: 100%; display: flex; align-items: center; justify-content: center; perspective: 1100px; animation: avPop 1s cubic-bezier(.22,1,.36,1) .2s backwards; }
 .av-glow { position: absolute; width: calc(var(--size) * 1.9); height: calc(var(--size) * 1.9); border-radius: 50%; background: radial-gradient(circle, rgba(165,139,255,.35), rgba(255,200,170,.18) 45%, transparent 70%); filter: blur(10px); }
+.av-orbit { position: absolute; width: calc(var(--size) * 1.25); height: calc(var(--size) * .42); border: 1px solid rgba(23,20,43,.12); border-radius: 50%; transform: rotate(-18deg); }
+.av-orbit.orbit-b { width: calc(var(--size) * 1.42); height: calc(var(--size) * .5); transform: rotate(24deg); border-color: rgba(242,87,29,.16); }
+.av-tilt { transform-style: preserve-3d; transform: translate3d(var(--mx), var(--my), 0) rotateX(var(--tx)) rotateY(var(--ty)); transition: transform .18s ease-out; will-change: transform; }
 .av-float { position: relative; transform-style: preserve-3d; animation: avFloat 5s ease-in-out infinite; }
 .av-coin { position: relative; width: var(--size); height: var(--size); transform-style: preserve-3d; animation: avSpin 8s linear infinite; }
 .av-face, .av-edge { position: absolute; inset: 0; border-radius: 50%; }
@@ -62,10 +67,15 @@
   linear-gradient(#fff,#fff) 0 100%/11px 2px, linear-gradient(#fff,#fff) 0 100%/2px 11px, linear-gradient(#fff,#fff) 100% 100%/11px 2px, linear-gradient(#fff,#fff) 100% 100%/2px 11px;
   background-repeat: no-repeat; filter: drop-shadow(0 0 3px rgba(23,20,43,.6)); }
 .av-frame em { position: absolute; left: 58px; top: 0; font: 500 10px/1.2 ui-monospace, Menlo, monospace; font-style: normal; color: #17142b; background: rgba(255,255,255,.88); padding: 3px 7px; border-radius: 6px; white-space: nowrap; }
+.av-metric-card { position: absolute; display: grid; gap: 3px; min-width: 86px; padding: 9px 11px; border: 1px solid rgba(23,20,43,.08); border-radius: 8px; background: rgba(255,255,255,.84); box-shadow: 0 18px 38px rgba(23,20,43,.1); backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px); animation: avDrift 6s ease-in-out infinite; }
+.av-metric-card small { font-size: 10px; color: #8a869c; text-transform: uppercase; letter-spacing: .08em; }
+.av-metric-card b { font: 700 17px/1 'Space Grotesk', sans-serif; letter-spacing: -.03em; }
+.av-metric-card.mc1 { left: 5%; bottom: 18%; }
+.av-metric-card.mc2 { right: 4%; top: 17%; animation-delay: 1.4s; }
 
 /* ---------- stat chips ---------- */
 .av-chips { position: relative; z-index: 2; display: flex; flex-wrap: wrap; gap: 10px; animation: avUp .8s .9s backwards; }
-.av-chips > div { display: grid; grid-template-columns: auto auto; align-items: center; column-gap: 8px; background: #fff; border: 1px solid rgba(23,20,43,.07); border-radius: 16px; padding: 8px 14px; box-shadow: 0 10px 26px rgba(23,20,43,.06); }
+.av-chips > div { display: grid; grid-template-columns: auto auto; align-items: center; column-gap: 8px; background: #fff; border: 1px solid rgba(23,20,43,.07); border-radius: 8px; padding: 8px 14px; box-shadow: 0 10px 26px rgba(23,20,43,.06); }
 .av-chips svg { color: #f2571d; grid-row: span 2; }
 .av-chips b { font: 700 16px 'Space Grotesk', sans-serif; letter-spacing: -.02em; line-height: 1; }
 .av-chips small { grid-column: 2; font-size: 11px; color: #8a869c; }
@@ -82,5 +92,5 @@
 @keyframes avLetter { from { opacity: 0; filter: blur(12px); transform: translateY(10px); } }
 
 @media (max-height: 700px) { .av-chips { display: none; } }
-@media (max-width: 900px) { .au-page .av { min-height: 520px; } .av-stage { min-height: 260px; --size: 170px; } .av-frame { display: none; } }
+@media (max-width: 900px) { .au-page .av { min-height: 520px; } .av-stage { min-height: 260px; --size: 170px; } .av-frame, .av-metric-card { display: none; } }
 @media (prefers-reduced-motion: reduce) { .av *, .av-stage { animation: none !important; } }

@@ -309,3 +309,268 @@
 .au-change-email:hover {
   color: var(--accent);
 }
+/* ---------- Professional login motion + polish ---------- */
+.au-page {
+  isolation: isolate;
+  animation: auPageIn .55s ease-out both;
+}
+
+.au-page::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+  background:
+    linear-gradient(120deg, transparent 0 30%, rgba(255,255,255,.28) 48%, transparent 64%),
+    radial-gradient(420px 300px at 24% 20%, rgba(255,255,255,.28), transparent 72%);
+  opacity: .8;
+  transform: translateX(-14%);
+  animation: auLightSweep 1.15s cubic-bezier(.22,1,.36,1) .08s both;
+}
+
+.au-page .au-side,
+.au-page .au-visual {
+  position: relative;
+  z-index: 1;
+}
+
+.au-page .au-visual {
+  animation: auVisualEnter .8s cubic-bezier(.22,1,.36,1) .08s both;
+}
+
+.au-page .au-side {
+  animation: auSideEnter .75s cubic-bezier(.22,1,.36,1) .16s both;
+}
+
+.au-page .au-side .au-card {
+  position: relative;
+  overflow: hidden;
+  justify-content: flex-start;
+  padding: clamp(24px, 4vh, 44px) clamp(26px, 5vw, 58px);
+  border: 1px solid rgba(23,20,43,.08);
+  box-shadow: 0 30px 80px rgba(23,20,43,.11);
+}
+
+.au-page .au-side .au-card::before {
+  content: '';
+  position: absolute;
+  inset: 0 0 auto;
+  height: 4px;
+  background: linear-gradient(90deg, #17142b, #f2571d, #1e8bc3);
+}
+
+.au-card-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  margin-top: clamp(8px, 2vh, 18px);
+  margin-bottom: clamp(14px, 2.6vh, 26px);
+  animation: auItemIn .58s cubic-bezier(.22,1,.36,1) .24s both;
+}
+
+.au-page .au-logo {
+  margin-bottom: 0;
+  border-radius: 8px;
+  background: linear-gradient(135deg, #17142b, #332d58);
+  box-shadow: 0 14px 30px rgba(23,20,43,.22);
+}
+
+.au-kicker {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 30px;
+  padding: 7px 10px;
+  border-radius: 8px;
+  border: 1px solid rgba(23,20,43,.08);
+  background: rgba(23,20,43,.045);
+  color: #4a465f;
+  font-size: 12px;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.au-kicker svg {
+  color: #138a4d;
+}
+
+.au-title-block {
+  animation: auItemIn .58s cubic-bezier(.22,1,.36,1) .3s both;
+}
+
+.au-page .au-card h1 {
+  margin: 0;
+  font-size: clamp(30px, 5vh, 42px);
+  line-height: 1;
+}
+
+.au-page .au-sub {
+  max-width: 420px;
+  font-size: 14.5px;
+  line-height: 1.6;
+}
+
+.au-error,
+.au-google,
+.au-or,
+.au-form,
+.au-guest,
+.au-switch {
+  animation: auItemIn .58s cubic-bezier(.22,1,.36,1) both;
+}
+
+.au-error { animation-delay: .34s; }
+.au-google { animation-delay: .38s; }
+.au-or { animation-delay: .43s; }
+.au-form { animation-delay: .48s; }
+.au-guest { animation-delay: .56s; }
+.au-switch { animation-delay: .62s; }
+
+.au-form {
+  display: grid;
+  gap: 12px;
+}
+
+.au-page .au-field {
+  gap: 8px;
+  margin-bottom: 0;
+  color: #302b45;
+  font-size: 12px;
+  letter-spacing: .02em;
+}
+
+.au-page .au-input {
+  min-height: 50px;
+  border-radius: 8px;
+  border-color: rgba(23,20,43,.08);
+  background: #f7f6fb;
+}
+
+.au-page .au-input svg {
+  color: #7d788f;
+}
+
+.au-page .au-input:hover {
+  background: #fff;
+  border-color: rgba(23,20,43,.16);
+}
+
+.au-page .au-input:focus-within {
+  transform: translateY(-1px);
+}
+
+.au-page .au-submit,
+.au-page .au-google,
+.au-page .au-guest {
+  min-height: 50px;
+  border-radius: 8px;
+  font-weight: 700;
+}
+
+.au-page .au-submit {
+  margin-top: 4px;
+}
+
+.au-google {
+  border-color: rgba(23,20,43,.1);
+  box-shadow: 0 10px 26px rgba(23,20,43,.06);
+}
+
+.au-page .au-guest {
+  border: 1px solid rgba(23,20,43,.08);
+}
+
+.au-page .au-goback {
+  animation: auItemIn .52s cubic-bezier(.22,1,.36,1) .18s both;
+}
+
+.au-page .au-strip {
+  min-height: 70px;
+  border: 1px solid rgba(23,20,43,.08);
+  box-shadow: 0 18px 46px rgba(23,20,43,.08);
+  animation: auStripEnter .7s cubic-bezier(.22,1,.36,1) .32s both;
+}
+
+.au-page .au-strip-icon {
+  border-radius: 8px;
+}
+
+.au-page .au-back {
+  border-radius: 8px;
+  font-weight: 700;
+}
+
+.au-otp-form {
+  gap: 16px;
+}
+
+.au-page .au-otp-box {
+  border-radius: 8px;
+  background: #f7f6fb;
+}
+
+@keyframes auPageIn {
+  from { opacity: 0; }
+}
+
+@keyframes auLightSweep {
+  from { opacity: 0; transform: translateX(-22%); }
+  to { opacity: .8; transform: translateX(0); }
+}
+
+@keyframes auVisualEnter {
+  from { opacity: 0; transform: translateX(28px) scale(.985); filter: blur(10px); }
+  to { opacity: 1; transform: translateX(0) scale(1); filter: blur(0); }
+}
+
+@keyframes auSideEnter {
+  from { opacity: 0; transform: translateX(-28px) scale(.985); filter: blur(8px); }
+  to { opacity: 1; transform: translateX(0) scale(1); filter: blur(0); }
+}
+
+@keyframes auStripEnter {
+  from { opacity: 0; transform: translateY(16px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes auItemIn {
+  from { opacity: 0; transform: translateY(14px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@media (max-height: 760px) {
+  .au-card-head { margin-top: 4px; margin-bottom: 14px; }
+  .au-page .au-card h1 { font-size: clamp(26px, 4.5vh, 34px); }
+  .au-form { gap: 9px; }
+  .au-page .au-input,
+  .au-page .au-submit,
+  .au-page .au-google,
+  .au-page .au-guest { min-height: 46px; }
+}
+
+@media (max-width: 900px) {
+  .au-page .au-side { animation-name: auItemIn; }
+  .au-page .au-visual { animation-name: auItemIn; }
+  .au-card-head { margin-top: 6px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .au-page,
+  .au-page::before,
+  .au-page .au-side,
+  .au-page .au-visual,
+  .au-page .au-strip,
+  .au-card-head,
+  .au-title-block,
+  .au-error,
+  .au-google,
+  .au-or,
+  .au-form,
+  .au-guest,
+  .au-switch,
+  .au-page .au-goback {
+    animation: none !important;
+  }
+}

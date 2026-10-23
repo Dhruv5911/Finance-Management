@@ -217,25 +217,30 @@ export default function AuthScreen() {
             <ArrowLeft size={15} /> {step === 'otp' ? 'Back' : 'Back'}
           </button>
 
-          <div className="au-logo">
-            {step === 'otp' ? (
-              <KeyRound size={22} />
-            ) : (
-              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.6" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M4 17l5-5 4 4 7-8" /><path d="M15 8h5v5" />
-              </svg>
-            )}
+          <div className="au-card-head">
+            <div className="au-logo">
+              {step === 'otp' ? (
+                <KeyRound size={22} />
+              ) : (
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.6" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M4 17l5-5 4 4 7-8" /><path d="M15 8h5v5" />
+                </svg>
+              )}
+            </div>
+            <span className="au-kicker"><ShieldCheck size={13} /> Secure access</span>
           </div>
 
           {step === 'otp' ? (
             /* ---------- OTP Verification Step ---------- */
             <>
-              <h1>Verify your email</h1>
-              <p className="au-sub">We sent a 6-digit code to <strong>{targetEmail}</strong></p>
+              <div className="au-title-block">
+                <h1>Verify your email</h1>
+                <p className="au-sub">We sent a 6-digit code to <strong>{targetEmail}</strong></p>
+              </div>
 
               {error && <div className="au-error" role="alert">{error}</div>}
 
-              <form onSubmit={handleVerifyOtp} noValidate>
+              <form className="au-form au-otp-form" onSubmit={handleVerifyOtp} noValidate>
                 <div className="au-otp-grid" onPaste={handleOtpPaste}>
                   {otp.map((digit, idx) => (
                     <input
@@ -256,7 +261,7 @@ export default function AuthScreen() {
                 </div>
 
                 <button type="submit" className="au-submit" disabled={verifying || otp.join('').length < 6}>
-                  {verifying ? 'Verifying code…' : 'Verify Email'}
+                  {verifying ? 'Verifying code...' : 'Verify Email'}
                 </button>
 
                 <div className="au-otp-actions">
@@ -266,7 +271,7 @@ export default function AuthScreen() {
                     onClick={handleResendOtp}
                     disabled={countdown > 0 || resending}
                   >
-                    {countdown > 0 ? `Resend code in ${countdown}s` : resending ? 'Sending code…' : 'Resend code'}
+                    {countdown > 0 ? `Resend code in ${countdown}s` : resending ? 'Sending code...' : 'Resend code'}
                   </button>
                   <button
                     type="button"
@@ -281,8 +286,10 @@ export default function AuthScreen() {
           ) : (
             /* ---------- Standard Login / Sign-up Step ---------- */
             <>
-              <h1>{signup ? 'Create Account' : 'Welcome Back'}</h1>
-              <p className="au-sub">{signup ? 'Start managing your personal finances' : 'Sign in to access your finance dashboard'}</p>
+              <div className="au-title-block">
+                <h1>{signup ? 'Create account' : 'Welcome back'}</h1>
+                <p className="au-sub">{signup ? 'Start managing your personal finances with a secure workspace.' : 'Sign in to continue to your finance dashboard.'}</p>
+              </div>
 
               {error && <div className="au-error" role="alert">{error}</div>}
 
@@ -303,7 +310,7 @@ export default function AuthScreen() {
 
               <div className="au-or"><span>or with email</span></div>
 
-              <form onSubmit={handleSubmit} noValidate>
+              <form className="au-form" onSubmit={handleSubmit} noValidate>
                 {signup && (
                   <label className="au-field">
                     <span>Name</span>
@@ -332,7 +339,7 @@ export default function AuthScreen() {
                 </label>
 
                 <button type="submit" className="au-submit" disabled={loading}>
-                  {loading ? 'Please wait…' : signup ? 'Create Account' : 'Sign In'}
+                  {loading ? 'Please wait...' : signup ? 'Create Account' : 'Sign In'}
                 </button>
               </form>
 

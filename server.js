@@ -1,15 +1,20 @@
 /**
  * FinAI — Node.js Express API & Auth Gateway
  * 
- * Responsibilities:
- * - Primary API Gateway on port 5000 (proxied by Vite on 5173/5174)
- * - User Authentication (Register, Login, Logout, Session UID)
+ * Powered by MongoDB Atlas & Mongoose!
+ * - Authentication (Register, Login, Logout, Session UID)
  * - Email OTP Verification (Nodemailer via Gmail SMTP)
  * - Google OAuth 2.0 ("Continue with Google")
- * - SQLite Database Operations (Users, Transactions, Budgets, OTPs)
+ * - Mongoose ODM (Users, Transactions, Budgets, OTPs)
  * - Financial Analytics & Data Endpoints
+ * - AI Receipt Scanner (Gemini 3.8 Flash Vision)
+ * - Bank Statement PDF Parser (pdf-parse)
  * - AI & RAG Microservice Proxy (forwarding to Python Flask on port 5001)
  */
+
+const dns = require('dns');
+// Use public DNS servers to resolve MongoDB Atlas SRV reliably across all networks
+try { dns.setServers(['8.8.8.8', '1.1.1.1']); } catch {}
 
 const express = require('express');
 const cors = require('cors');
@@ -19,18 +24,18 @@ const multer = require('multer');
 const fs = require('fs');
 const path = require('path');
 const crypto = require('crypto');
-const { DatabaseSync } = require('node:sqlite');
 const jwt = require('jsonwebtoken');
+const bcrypt = require('bcrypt');
+const mongoose = require('mongoose');
 const pdfParse = require('pdf-parse');
 require('dotenv').config();
 
-const JWT_SECRET = process.env.JWT_SECRET || process.env.SECRET_KEY || 'finai-secure-jwt-key-92831';
+const { User, Transaction, Budget, EmailOtp } = require('./models');
 
-const app = express();
+const JWT_SECRET = process.env.JWT_SECRET || process.env.SECRET_KEY || 'finai-secure-jwt-key-92831';
 const PORT = process.env.PORT || 5000;
 const FLASK_AI_URL = process.env.FLASK_AI_URL || 'http://127.0.0.1:5001';
 const FRONTEND_URL = process.env.FRONTEND_URL || 'http://localhost:5173';
-const DB_PATH = path.join(__dirname, 'finai.db');
 const UPLOAD_FOLDER = path.join(__dirname, 'uploads');
 const SAMPLE_CSV = path.join(__dirname, 'data', 'sample_transactions.csv');
 
@@ -39,55 +44,19 @@ if (!fs.existsSync(UPLOAD_FOLDER)) {
 }
 
 // ---------------------------------------------------------------------------
-// Database (SQLite via Node 24 node:sqlite)
+// MongoDB Atlas Connection
 // ---------------------------------------------------------------------------
-const db = new DatabaseSync(DB_PATH);
+const MONGODB_URI = process.env.MONGODB_URI || 'mongodb://localhost:27017/finai';
 
-// Ensure tables and columns exist
-db.exec(`
-  CREATE TABLE IF NOT EXISTS users (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    name VARCHAR(80) NOT NULL DEFAULT 'Guest',
-    email VARCHAR(120) UNIQUE,
-    password_hash VARCHAR(255),
-    is_guest BOOLEAN NOT NULL DEFAULT 0,
-    email_verified BOOLEAN NOT NULL DEFAULT 0,
-    google_id VARCHAR(255) UNIQUE,
-    avatar_url VARCHAR(500),
-    data_source VARCHAR(20) NOT NULL DEFAULT 'empty',
-    data_filename VARCHAR(255),
-    created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
-  );
+mongoose.connect(MONGODB_URI)
+  .then(() => {
+    console.log('✅ Connected to MongoDB Atlas successfully!');
+  })
+  .catch((err) => {
+    console.error('❌ MongoDB Atlas connection error:', err.message);
+  });
 
-  CREATE TABLE IF NOT EXISTS email_otps (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    email VARCHAR(120) NOT NULL,
-    code_hash VARCHAR(255) NOT NULL,
-    expires_at DATETIME NOT NULL,
-    attempts INTEGER NOT NULL DEFAULT 0,
-    created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
-  );
-
-  CREATE TABLE IF NOT EXISTS transactions (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    user_id INTEGER NOT NULL,
-    date DATETIME NOT NULL,
-    description VARCHAR(255) NOT NULL,
-    category VARCHAR(80) NOT NULL,
-    type VARCHAR(10) NOT NULL,
-    amount REAL NOT NULL,
-    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
-  );
-
-  CREATE TABLE IF NOT EXISTS budgets (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    user_id INTEGER NOT NULL,
-    category VARCHAR(80) NOT NULL,
-    limit_amount REAL NOT NULL,
-    UNIQUE(user_id, category),
-    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
-  );
-`);
+const app = express();
 
 // ---------------------------------------------------------------------------
 // Middleware
@@ -100,21 +69,22 @@ app.use(cookieParser());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-const upload = multer({ dest: UPLOAD_FOLDER, limits: { fileSize: 5 * 1024 * 1024 } });
+const upload = multer({ dest: UPLOAD_FOLDER });
 
 // ---------------------------------------------------------------------------
-// Helpers — Password Hashing (Werkzeug scrypt compatible)
+// Password & Hash Helpers
 // ---------------------------------------------------------------------------
-function hashPassword(password) {
-  const salt = crypto.randomBytes(12).toString('base64');
-  const N = 32768, r = 8, p = 1, keyLen = 64;
-  const derived = crypto.scryptSync(password, salt, keyLen, { N, r, p, maxmem: 128 * 1024 * 1024 });
-  return `scrypt:${N}:${r}:${p}$${salt}$${derived.toString('hex')}`;
+async function hashPassword(password) {
+  return await bcrypt.hash(password, 10);
 }
 
-function verifyPassword(hashStr, password) {
+async function verifyPassword(hashStr, password) {
   if (!hashStr || !password) return false;
   try {
+    if (hashStr.startsWith('$2a$') || hashStr.startsWith('$2b$')) {
+      return await bcrypt.compare(password, hashStr);
+    }
+    // Fallback for older scrypt / sha256 hashes if any
     if (hashStr.startsWith('scrypt:')) {
       const parts = hashStr.split('$');
       const params = parts[0].split(':');
@@ -127,9 +97,8 @@ function verifyPassword(hashStr, password) {
       const derived = crypto.scryptSync(password, salt, keyLen, { N, r, p, maxmem: 128 * 1024 * 1024 });
       return derived.toString('hex') === hash;
     }
-    // Fallback sha256
-    const hash = crypto.createHash('sha256').update(password).digest('hex');
-    return hash === hashStr;
+    const sha = crypto.createHash('sha256').update(password).digest('hex');
+    return sha === hashStr;
   } catch {
     return false;
   }
@@ -144,12 +113,12 @@ function verifyOtpHash(hash, code) {
 }
 
 // ---------------------------------------------------------------------------
-// Helpers — JWT Authentication (JSON Web Tokens)
+// Helpers — JWT Authentication
 // ---------------------------------------------------------------------------
 function generateToken(user) {
   if (!user || user.is_guest) return null;
   return jwt.sign(
-    { id: user.id, email: user.email, name: user.name },
+    { id: String(user._id || user.id), email: user.email, name: user.name },
     JWT_SECRET,
     { expiresIn: '7d' }
   );
@@ -166,7 +135,7 @@ function verifyToken(token) {
 // ---------------------------------------------------------------------------
 // Helpers — Current User
 // ---------------------------------------------------------------------------
-function getCurrentUser(req, res, create = false) {
+async function getCurrentUser(req, res, create = false) {
   let uid = null;
 
   // 1. Check Bearer Token in Authorization header
@@ -185,14 +154,18 @@ function getCurrentUser(req, res, create = false) {
   }
 
   let user = null;
-  if (uid) {
-    user = db.prepare('SELECT * FROM users WHERE id = ?').get(uid);
+  if (uid && mongoose.Types.ObjectId.isValid(uid)) {
+    user = await User.findById(uid);
   }
+
   if (!user && create) {
-    const info = db.prepare("INSERT INTO users (name, is_guest, data_source, created_at) VALUES ('Guest', 1, 'empty', CURRENT_TIMESTAMP)").run();
-    user = db.prepare('SELECT * FROM users WHERE id = ?').get(info.lastInsertRowid);
+    user = await User.create({
+      name: 'Guest',
+      is_guest: true,
+      data_source: 'empty',
+    });
     if (res && res.cookie) {
-      res.cookie('uid', user.id, { httpOnly: true, sameSite: 'lax', maxAge: 30 * 24 * 60 * 60 * 1000 });
+      res.cookie('uid', String(user._id), { httpOnly: true, sameSite: 'lax', maxAge: 30 * 24 * 60 * 60 * 1000 });
     }
   }
   return user;
@@ -201,7 +174,7 @@ function getCurrentUser(req, res, create = false) {
 function toPublicUser(u) {
   if (!u) return null;
   return {
-    id: u.id,
+    id: String(u._id || u.id),
     name: u.name,
     email: u.email,
     is_guest: Boolean(u.is_guest),
@@ -252,17 +225,20 @@ async function sendOtpEmail(toEmail, otp) {
     <body>
       <div class="card">
         <div class="logo">
-          <span class="logo-badge">F</span> FinAI
+          <span class="logo-badge">₹</span>
+          <span>FinAI</span>
         </div>
-        <h1>Your FinAI verification code is ${otp}</h1>
-        <p>Thank you for choosing FinAI! Enter the 6-digit verification code below to verify your email and activate your account.</p>
+        <h1>Verify your email</h1>
+        <p>Use the 6-digit code below to finish signing in or setting up your FinAI account. This code is valid for <strong>10 minutes</strong>.</p>
+        
         <div class="otp-box">
           <div class="otp-code">${otp}</div>
-          <div class="hint">Expires in 10 minutes &bull; Do not share this code</div>
+          <div class="hint">Do not share this code with anyone.</div>
         </div>
-        <p style="font-size: 13px;">If you did not request this verification code, no action is needed.</p>
+
+        <p style="font-size: 13px; color: #767389;">If you didn't request this code, you can safely ignore this email.</p>
         <div class="footer">
-          &copy; FinAI &bull; Intelligent Personal Finance Assistant
+          &copy; ${new Date().getFullYear()} FinAI — Intelligent Personal Finance Assistant
         </div>
       </div>
     </body>
@@ -271,31 +247,33 @@ async function sendOtpEmail(toEmail, otp) {
 
   try {
     await transporter.sendMail({
-      from: `FinAI <${user}>`,
+      from: `"FinAI Security" <${user}>`,
       to: toEmail,
-      subject: `Your FinAI verification code is ${otp}`,
-      text: `Your FinAI verification code is: ${otp}. It will expire in 10 minutes.`,
+      subject: `${otp} is your FinAI verification code`,
+      text: `Your FinAI verification code is ${otp}. It expires in 10 minutes.`,
       html,
     });
-    console.log(`[FinAI] Verification email sent to ${toEmail}`);
+    console.log(`[FinAI Node.js OTP] Sent email OTP to ${toEmail}`);
     return true;
   } catch (err) {
-    console.error(`[FinAI] Nodemailer error: ${err.message}`);
-    console.log(`[FinAI Node.js DEV OTP FALLBACK] Code for ${toEmail} is: ${otp}`);
+    console.error('[FinAI Node.js OTP] Failed to send email:', err.message);
     return false;
   }
 }
 
 async function generateAndSaveOtp(email) {
-  const code = String(Math.floor(100000 + Math.random() * 900000));
-  const expiresAt = new Date(Date.now() + 10 * 60 * 1000).toISOString();
+  const code = String(crypto.randomInt(100000, 999999));
   const codeHash = hashOtp(code);
+  const expiresAt = new Date(Date.now() + 10 * 60 * 1000);
 
-  db.prepare('DELETE FROM email_otps WHERE email = ?').run(email);
-  db.prepare(`
-    INSERT INTO email_otps (email, code_hash, expires_at, attempts, created_at)
-    VALUES (?, ?, ?, 0, CURRENT_TIMESTAMP)
-  `).run(email, codeHash, expiresAt);
+  // Clear previous OTPs for this email and insert new one
+  await EmailOtp.deleteMany({ email });
+  await EmailOtp.create({
+    email,
+    code_hash: codeHash,
+    expires_at: expiresAt,
+    attempts: 0,
+  });
 
   await sendOtpEmail(email, code);
   return code;
@@ -330,20 +308,26 @@ app.post('/api/register', async (req, res) => {
       return res.status(400).json({ error: 'Password must be at least 6 characters.' });
     }
 
-    const existing = db.prepare('SELECT * FROM users WHERE email = ?').get(email);
+    const existing = await User.findOne({ email });
     if (existing) {
       if (existing.email_verified) {
         return res.status(409).json({ error: 'An account with this email already exists.' });
       }
       // Update unverified account
-      const pwHash = hashPassword(password);
-      db.prepare('UPDATE users SET name = ?, password_hash = ? WHERE id = ?').run(name.slice(0, 80), pwHash, existing.id);
+      const pwHash = await hashPassword(password);
+      existing.name = name.slice(0, 80);
+      existing.password_hash = pwHash;
+      await existing.save();
     } else {
-      const pwHash = hashPassword(password);
-      db.prepare(`
-        INSERT INTO users (name, email, password_hash, is_guest, email_verified, data_source, created_at)
-        VALUES (?, ?, ?, 0, 0, 'empty', CURRENT_TIMESTAMP)
-      `).run(name.slice(0, 80), email, pwHash);
+      const pwHash = await hashPassword(password);
+      await User.create({
+        name: name.slice(0, 80),
+        email,
+        password_hash: pwHash,
+        is_guest: false,
+        email_verified: false,
+        data_source: 'empty',
+      });
     }
 
     await generateAndSaveOtp(email);
@@ -368,7 +352,7 @@ app.post('/api/verify-otp', async (req, res) => {
       return res.status(400).json({ error: 'Email and 6-digit code are required.' });
     }
 
-    const record = db.prepare('SELECT * FROM email_otps WHERE email = ? ORDER BY id DESC LIMIT 1').get(email);
+    const record = await EmailOtp.findOne({ email }).sort({ createdAt: -1 });
     if (!record) {
       return res.status(400).json({ error: 'No verification code found. Please request a new code.' });
     }
@@ -382,29 +366,29 @@ app.post('/api/verify-otp', async (req, res) => {
     }
 
     if (!verifyOtpHash(record.code_hash, otp)) {
-      const attempts = record.attempts + 1;
-      db.prepare('UPDATE email_otps SET attempts = ? WHERE id = ?').run(attempts, record.id);
-      const rem = Math.max(0, 5 - attempts);
+      record.attempts += 1;
+      await record.save();
+      const rem = Math.max(0, 5 - record.attempts);
       if (rem === 0) {
         return res.status(400).json({ error: 'Too many failed attempts. Please request a new code.' });
       }
       return res.status(400).json({ error: `Invalid verification code. ${rem} attempt${rem !== 1 ? 's' : ''} remaining.` });
     }
 
-    const user = db.prepare('SELECT * FROM users WHERE email = ?').get(email);
+    const user = await User.findOne({ email });
     if (!user) {
       return res.status(404).json({ error: 'Account not found.' });
     }
 
-    db.prepare('UPDATE users SET email_verified = 1 WHERE id = ?').run(user.id);
-    db.prepare('DELETE FROM email_otps WHERE email = ?').run(email);
+    user.email_verified = true;
+    await user.save();
+    await EmailOtp.deleteMany({ email });
 
-    res.cookie('uid', user.id, { httpOnly: true, sameSite: 'lax', maxAge: 30 * 24 * 60 * 60 * 1000 });
+    res.cookie('uid', String(user._id), { httpOnly: true, sameSite: 'lax', maxAge: 30 * 24 * 60 * 60 * 1000 });
 
-    const updatedUser = db.prepare('SELECT * FROM users WHERE id = ?').get(user.id);
     return res.json({
       message: 'Email verified successfully.',
-      user: toPublicUser(updatedUser),
+      user: toPublicUser(user),
     });
   } catch (err) {
     console.error(err);
@@ -417,13 +401,13 @@ app.post('/api/resend-otp', async (req, res) => {
     const email = String(req.body.email || '').trim().toLowerCase();
     if (!email) return res.status(400).json({ error: 'Email is required.' });
 
-    const user = db.prepare('SELECT * FROM users WHERE email = ?').get(email);
+    const user = await User.findOne({ email });
     if (!user) return res.status(404).json({ error: 'No account found with this email.' });
     if (user.email_verified) return res.status(400).json({ error: 'This email is already verified. Please sign in.' });
 
-    const last = db.prepare('SELECT * FROM email_otps WHERE email = ? ORDER BY id DESC LIMIT 1').get(email);
+    const last = await EmailOtp.findOne({ email }).sort({ createdAt: -1 });
     if (last) {
-      const elapsed = (Date.now() - new Date(last.created_at).getTime()) / 1000;
+      const elapsed = (Date.now() - new Date(last.createdAt).getTime()) / 1000;
       if (elapsed < 60) {
         const wait = Math.ceil(60 - elapsed);
         return res.status(429).json({ error: `Please wait ${wait}s before requesting a new code.` });
@@ -443,16 +427,17 @@ app.post('/api/login', async (req, res) => {
     const email = String(req.body.email || '').trim().toLowerCase();
     const password = String(req.body.password || '');
 
-    const user = db.prepare('SELECT * FROM users WHERE email = ?').get(email);
+    const user = await User.findOne({ email });
     if (!user) {
       return res.status(401).json({ error: 'Incorrect email or password.' });
     }
 
     if (user.google_id && !user.password_hash) {
-      return res.status(400).json({ error: 'Use Continue with Google' });
+      return res.status(400).json({ error: 'Please sign in with Google.' });
     }
 
-    if (!verifyPassword(user.password_hash, password)) {
+    const isMatch = await verifyPassword(user.password_hash, password);
+    if (!isMatch) {
       return res.status(401).json({ error: 'Incorrect email or password.' });
     }
 
@@ -465,7 +450,7 @@ app.post('/api/login', async (req, res) => {
       });
     }
 
-    res.cookie('uid', user.id, { httpOnly: true, sameSite: 'lax', maxAge: 30 * 24 * 60 * 60 * 1000 });
+    res.cookie('uid', String(user._id), { httpOnly: true, sameSite: 'lax', maxAge: 30 * 24 * 60 * 60 * 1000 });
     return res.json({ message: 'Logged in.', user: toPublicUser(user) });
   } catch (err) {
     console.error(err);
@@ -478,8 +463,8 @@ app.post('/api/logout', (req, res) => {
   return res.json({ message: 'Logged out.' });
 });
 
-app.get('/api/me', (req, res) => {
-  const user = getCurrentUser(req, res, false);
+app.get('/api/me', async (req, res) => {
+  const user = await getCurrentUser(req, res, false);
   if (!user || user.is_guest) {
     return res.json({ user: null });
   }
@@ -553,22 +538,26 @@ app.get('/api/auth/google/callback', async (req, res) => {
     const name = (info.name || email.split('@')[0]).slice(0, 80);
     const avatar = info.picture || null;
 
-    let user = db.prepare('SELECT * FROM users WHERE google_id = ? OR email = ?').get(googleId, email);
+    let user = await User.findOne({ $or: [{ google_id: googleId }, { email }] });
     if (user) {
-      db.prepare(`
-        UPDATE users
-        SET google_id = ?, email_verified = 1, avatar_url = COALESCE(avatar_url, ?), name = CASE WHEN name = 'Guest' THEN ? ELSE name END
-        WHERE id = ?
-      `).run(googleId, avatar, name, user.id);
+      user.google_id = googleId;
+      user.email_verified = true;
+      if (avatar) user.avatar_url = avatar;
+      if (user.name === 'Guest') user.name = name;
+      await user.save();
     } else {
-      const ins = db.prepare(`
-        INSERT INTO users (name, email, google_id, avatar_url, email_verified, is_guest, data_source, created_at)
-        VALUES (?, ?, ?, ?, 1, 0, 'empty', CURRENT_TIMESTAMP)
-      `).run(name, email, googleId, avatar);
-      user = { id: ins.lastInsertRowid };
+      user = await User.create({
+        name,
+        email,
+        google_id: googleId,
+        avatar_url: avatar,
+        email_verified: true,
+        is_guest: false,
+        data_source: 'empty',
+      });
     }
 
-    res.cookie('uid', user.id, { httpOnly: true, sameSite: 'lax', maxAge: 30 * 24 * 60 * 60 * 1000 });
+    res.cookie('uid', String(user._id), { httpOnly: true, sameSite: 'lax', maxAge: 30 * 24 * 60 * 60 * 1000 });
     return res.redirect(`${frontUrl}/?login=google`);
   } catch (err) {
     console.error('Google callback error:', err);
@@ -577,25 +566,28 @@ app.get('/api/auth/google/callback', async (req, res) => {
 });
 
 // ---------------------------------------------------------------------------
-// Transactions, Budgets & Financial Analytics
+// Transactions, Budgets & Financial Analytics (MongoDB Mongoose)
 // ---------------------------------------------------------------------------
 
-app.get('/api/transactions', (req, res) => {
-  const user = getCurrentUser(req, res, false);
+app.get('/api/transactions', async (req, res) => {
+  const user = await getCurrentUser(req, res, false);
   if (!user) return res.json({ transactions: [] });
 
-  const rows = db.prepare(`
-    SELECT id, date, description, category, type, amount
-    FROM transactions
-    WHERE user_id = ?
-    ORDER BY date DESC
-  `).all(user.id);
+  const rows = await Transaction.find({ user_id: user._id }).sort({ date: -1 });
+  const txns = rows.map(r => ({
+    id: String(r._id),
+    date: r.date,
+    description: r.description,
+    category: r.category,
+    type: r.type,
+    amount: r.amount,
+  }));
 
-  return res.json({ transactions: rows });
+  return res.json({ transactions: txns });
 });
 
-app.post('/api/transactions', (req, res) => {
-  const user = getCurrentUser(req, res, true);
+app.post('/api/transactions', async (req, res) => {
+  const user = await getCurrentUser(req, res, true);
   const { date, description, category, type, amount } = req.body;
 
   if (!description || !category || !type || amount === undefined) {
@@ -613,13 +605,17 @@ app.post('/api/transactions', (req, res) => {
     return res.status(400).json({ error: 'Amount must be a positive number.' });
   }
 
-  const info = db.prepare(`
-    INSERT INTO transactions (user_id, date, description, category, type, amount)
-    VALUES (?, ?, ?, ?, ?, ?)
-  `).run(user.id, d, String(description).trim(), String(category).trim(), cleanType, numAmount);
+  const txn = await Transaction.create({
+    user_id: user._id,
+    date: d,
+    description: String(description).trim(),
+    category: String(category).trim(),
+    type: cleanType,
+    amount: numAmount,
+  });
 
   return res.status(201).json({
-    id: info.lastInsertRowid,
+    id: String(txn._id),
     date: d,
     description,
     category,
@@ -628,22 +624,24 @@ app.post('/api/transactions', (req, res) => {
   });
 });
 
-app.delete('/api/transactions/:id', (req, res) => {
-  const user = getCurrentUser(req, res, false);
+app.delete('/api/transactions/:id', async (req, res) => {
+  const user = await getCurrentUser(req, res, false);
   if (!user) return res.status(401).json({ error: 'Not authenticated.' });
 
-  const id = parseInt(req.params.id, 10);
-  db.prepare('DELETE FROM transactions WHERE id = ? AND user_id = ?').run(id, user.id);
+  const id = req.params.id;
+  if (mongoose.Types.ObjectId.isValid(id)) {
+    await Transaction.deleteOne({ _id: id, user_id: user._id });
+  }
   return res.json({ message: 'Deleted.' });
 });
 
-app.get('/api/summary', (req, res) => {
-  const user = getCurrentUser(req, res, false);
+app.get('/api/summary', async (req, res) => {
+  const user = await getCurrentUser(req, res, false);
   if (!user) {
     return res.json({ total_income: 0, total_expense: 0, net_savings: 0, savings_rate: 0, count: 0, source: 'empty' });
   }
 
-  const rows = db.prepare('SELECT type, amount FROM transactions WHERE user_id = ?').all(user.id);
+  const rows = await Transaction.find({ user_id: user._id });
   let income = 0;
   let expense = 0;
   for (const r of rows) {
@@ -664,83 +662,84 @@ app.get('/api/summary', (req, res) => {
   });
 });
 
-app.get('/api/categories', (req, res) => {
-  const user = getCurrentUser(req, res, false);
+app.get('/api/categories', async (req, res) => {
+  const user = await getCurrentUser(req, res, false);
   if (!user) return res.json({ categories: {} });
 
-  const rows = db.prepare(`
-    SELECT category, SUM(amount) as total
-    FROM transactions
-    WHERE user_id = ? AND type = 'expense'
-    GROUP BY category
-  `).all(user.id);
+  const rows = await Transaction.aggregate([
+    { $match: { user_id: user._id, type: 'expense' } },
+    { $group: { _id: '$category', total: { $sum: '$amount' } } },
+  ]);
 
   const categories = {};
   for (const r of rows) {
-    categories[r.category] = r.total;
+    categories[r._id] = r.total;
   }
   return res.json({ categories });
 });
 
-app.get('/api/monthly-summary', (req, res) => {
-  const user = getCurrentUser(req, res, false);
+app.get('/api/monthly-summary', async (req, res) => {
+  const user = await getCurrentUser(req, res, false);
   if (!user) return res.json({ months: [] });
 
-  const rows = db.prepare(`
-    SELECT strftime('%Y-%m', date) as month, type, SUM(amount) as total
-    FROM transactions
-    WHERE user_id = ?
-    GROUP BY month, type
-    ORDER BY month ASC
-  `).all(user.id);
-
+  const rows = await Transaction.find({ user_id: user._id });
   const monthMap = {};
+
   for (const r of rows) {
-    if (!monthMap[r.month]) monthMap[r.month] = { month: r.month, income: 0, expense: 0, savings: 0 };
-    if (r.type === 'income') monthMap[r.month].income = r.total;
-    if (r.type === 'expense') monthMap[r.month].expense = r.total;
-    monthMap[r.month].savings = monthMap[r.month].income - monthMap[r.month].expense;
+    const month = String(r.date || '').slice(0, 7);
+    if (!month || month.length < 7) continue;
+
+    if (!monthMap[month]) monthMap[month] = { month, income: 0, expense: 0, savings: 0 };
+    if (r.type === 'income') monthMap[month].income += r.amount;
+    if (r.type === 'expense') monthMap[month].expense += r.amount;
+    monthMap[month].savings = monthMap[month].income - monthMap[month].expense;
   }
 
-  return res.json({ months: Object.values(monthMap) });
+  const sortedMonths = Object.values(monthMap).sort((a, b) => a.month.localeCompare(b.month));
+  return res.json({ months: sortedMonths });
 });
 
-app.get('/api/budget', (req, res) => {
-  const user = getCurrentUser(req, res, false);
+app.get('/api/budget', async (req, res) => {
+  const user = await getCurrentUser(req, res, false);
   if (!user) return res.json({ budgets: {} });
 
-  const rows = db.prepare('SELECT category, limit_amount FROM budgets WHERE user_id = ?').all(user.id);
+  const rows = await Budget.find({ user_id: user._id });
   const budgets = {};
   for (const r of rows) budgets[r.category] = r.limit_amount;
   return res.json({ budgets });
 });
 
-app.post('/api/budget', (req, res) => {
-  const user = getCurrentUser(req, res, true);
+app.post('/api/budget', async (req, res) => {
+  const user = await getCurrentUser(req, res, true);
   const { budgets } = req.body;
   if (!budgets || typeof budgets !== 'object') {
     return res.status(400).json({ error: 'Budgets object is required.' });
   }
 
-  db.prepare('DELETE FROM budgets WHERE user_id = ?').run(user.id);
-  const insert = db.prepare('INSERT INTO budgets (user_id, category, limit_amount) VALUES (?, ?, ?)');
+  await Budget.deleteMany({ user_id: user._id });
+  const docs = [];
   for (const [cat, limit] of Object.entries(budgets)) {
     const val = parseFloat(limit);
     if (!isNaN(val) && val > 0) {
-      insert.run(user.id, String(cat), val);
+      docs.push({ user_id: user._id, category: String(cat), limit_amount: val });
     }
+  }
+  if (docs.length) {
+    await Budget.insertMany(docs);
   }
 
   return res.json({ message: 'Budgets saved.' });
 });
 
-app.post('/api/clear-data', (req, res) => {
-  const user = getCurrentUser(req, res, false);
+app.post('/api/clear-data', async (req, res) => {
+  const user = await getCurrentUser(req, res, false);
   if (!user) return res.json({ message: 'No data to clear.' });
 
-  db.prepare('DELETE FROM transactions WHERE user_id = ?').run(user.id);
-  db.prepare('DELETE FROM budgets WHERE user_id = ?').run(user.id);
-  db.prepare("UPDATE users SET data_source = 'empty', data_filename = NULL WHERE id = ?").run(user.id);
+  await Transaction.deleteMany({ user_id: user._id });
+  await Budget.deleteMany({ user_id: user._id });
+  user.data_source = 'empty';
+  user.data_filename = null;
+  await user.save();
 
   return res.json({ message: 'All data cleared successfully.' });
 });
@@ -752,8 +751,8 @@ app.get('/api/download-sample', (req, res) => {
   return res.status(404).json({ error: 'Sample CSV not found.' });
 });
 
-app.post('/api/upload', upload.single('file'), (req, res) => {
-  const user = getCurrentUser(req, res, true);
+app.post('/api/upload', upload.single('file'), async (req, res) => {
+  const user = await getCurrentUser(req, res, true);
   if (!req.file) return res.status(400).json({ error: 'No file provided.' });
 
   try {
@@ -777,15 +776,10 @@ app.post('/api/upload', upload.single('file'), (req, res) => {
     const typeIdx = headers.indexOf('type');
     const amtIdx = headers.indexOf('amount');
 
-    const insertTxn = db.prepare(`
-      INSERT INTO transactions (user_id, date, description, category, type, amount)
-      VALUES (?, ?, ?, ?, ?, ?)
-    `);
-
     // Replace current transactions
-    db.prepare('DELETE FROM transactions WHERE user_id = ?').run(user.id);
+    await Transaction.deleteMany({ user_id: user._id });
 
-    let count = 0;
+    const docs = [];
     for (let i = 1; i < lines.length; i++) {
       const parts = lines[i].split(',').map(p => p.trim());
       if (parts.length < headers.length) continue;
@@ -797,17 +791,26 @@ app.post('/api/upload', upload.single('file'), (req, res) => {
       const amt = parseFloat(parts[amtIdx]);
 
       if (['income', 'expense'].includes(t) && !isNaN(amt)) {
-        insertTxn.run(user.id, d, desc, cat, t, amt);
-        count++;
+        docs.push({
+          user_id: user._id,
+          date: d,
+          description: desc,
+          category: cat,
+          type: t,
+          amount: amt,
+        });
       }
     }
 
-    db.prepare("UPDATE users SET data_source = 'uploaded', data_filename = ? WHERE id = ?").run(
-      req.file.originalname,
-      user.id
-    );
+    if (docs.length) {
+      await Transaction.insertMany(docs);
+    }
 
-    return res.json({ message: `Successfully imported ${count} transactions.`, count });
+    user.data_source = 'uploaded';
+    user.data_filename = req.file.originalname;
+    await user.save();
+
+    return res.json({ message: `Successfully imported ${docs.length} transactions.`, count: docs.length });
   } catch (err) {
     console.error(err);
     return res.status(500).json({ error: 'Failed to process CSV file.' });
@@ -879,7 +882,6 @@ Respond ONLY with a valid JSON object matching the schema above.`;
       }
     }
 
-    // Smart fallback if API key is not configured or network error
     return res.json({
       merchant: 'Receipt Merchant',
       date: new Date().toISOString().split('T')[0],
@@ -896,37 +898,67 @@ Respond ONLY with a valid JSON object matching the schema above.`;
 });
 
 // ---------------------------------------------------------------------------
-// Bank statement text -> transactions (works with pdf-parse output where one
-// transaction may be split over several lines, or sit on a single line)
+// Bank Statement Parser Helpers
 // ---------------------------------------------------------------------------
-const MONTHS = { jan: 1, feb: 2, mar: 3, apr: 4, may: 5, jun: 6, jul: 7, aug: 8, sep: 9, oct: 10, nov: 11, dec: 12 };
-const DATE_SRC = '(?:\\d{1,2}[-/.]\\d{1,2}[-/.]\\d{4}|\\d{1,2}\\s+(?:Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)[a-z]*\\.?\\s+\\d{4}|\\d{4}[-/.]\\d{1,2}[-/.]\\d{1,2})';
-const DATE_AT_START = new RegExp('^\\s*(' + DATE_SRC + ')', 'i');
-const DATE_ANY = new RegExp(DATE_SRC, 'gi');
-const AMOUNT_RE = /\d+(?:,\d{2,3})*\.\d{2}/g;
+const MONTH_NAMES = {
+  jan: 1, feb: 2, mar: 3, apr: 4, may: 5, jun: 6,
+  jul: 7, aug: 8, sep: 9, oct: 10, nov: 11, dec: 12,
+};
 
-function pad2(n) { return String(n).padStart(2, '0'); }
+const DATE_AT_START = /^(?:(\d{1,2}[-/\.]\d{1,2}[-/\.]\d{2,4})|(\d{1,2}\s+[A-Za-z]{3,9}\s+\d{2,4})|(\d{4}[-/\.]\d{1,2}[-/\.]\d{1,2}))/;
+const DATE_ANY = /(?:\b\d{1,2}[-/\.]\d{1,2}[-/\.]\d{2,4}\b|\b\d{1,2}\s+[A-Za-z]{3,9}\s+\d{2,4}\b|\b\d{4}[-/\.]\d{1,2}[-/\.]\d{1,2}\b)/g;
+const AMOUNT_RE = /\b\d{1,3}(?:,\d{2,3})*(?:\.\d{1,2})?\b/g;
 
-// Indian statements are day-first (05-09-2026 = 5 Sep). Returns YYYY-MM-DD without timezone shifts.
-function toIsoDate(raw) {
-  let m = raw.match(/^(\d{4})[-/.](\d{1,2})[-/.](\d{1,2})$/);
-  if (m) return `${m[1]}-${pad2(m[2])}-${pad2(m[3])}`;
-  m = raw.match(/^(\d{1,2})[-/.](\d{1,2})[-/.](\d{4})$/);
-  if (m) return `${m[3]}-${pad2(m[2])}-${pad2(m[1])}`;
-  m = raw.match(/^(\d{1,2})\s+([A-Za-z]{3})[a-z]*\.?\s+(\d{4})$/);
-  if (m && MONTHS[m[2].toLowerCase()]) return `${m[3]}-${pad2(MONTHS[m[2].toLowerCase()])}-${pad2(m[1])}`;
-  return null;
+function toIsoDate(str) {
+  if (!str) return null;
+  const s = String(str).trim();
+
+  let m = s.match(/^(\d{4})[-/\.](\d{1,2})[-/\.](\d{1,2})$/);
+  if (m) {
+    return `${m[1]}-${String(m[2]).padStart(2, '0')}-${String(m[3]).padStart(2, '0')}`;
+  }
+
+  m = s.match(/^(\d{1,2})[-/\.](\d{1,2})[-/\.](\d{2,4})$/);
+  if (m) {
+    let year = m[3];
+    if (year.length === 2) year = '20' + year;
+    let day = parseInt(m[1], 10);
+    let month = parseInt(m[2], 10);
+    if (month > 12 && day <= 12) {
+      const t = day; day = month; month = t;
+    }
+    return `${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+  }
+
+  m = s.match(/^(\d{1,2})\s+([A-Za-z]+)\s+(\d{2,4})$/);
+  if (m) {
+    const key = m[2].toLowerCase().slice(0, 3);
+    const month = MONTH_NAMES[key];
+    if (month) {
+      let year = m[3];
+      if (year.length === 2) year = '20' + year;
+      return `${year}-${String(month).padStart(2, '0')}-${String(m[1]).padStart(2, '0')}`;
+    }
+  }
+
+  const d = new Date(s);
+  return isNaN(d.getTime()) ? null : d.toISOString().split('T')[0];
 }
 
 function categorize(desc, type) {
-  const l = desc.toLowerCase();
-  if (type === 'income') return /salary/.test(l) ? 'Salary' : 'Income';
-  if (/swiggy|zomato|eats|cafe|restaurant|mcdonald|dominos|chai|food/.test(l)) return 'Food & Dining';
-  if (/bigbasket|dmart|grocer|supermarket|fresh mart|blinkit|zepto/.test(l)) return 'Groceries';
-  if (/uber|\bola\b|metro|fuel|petrol|irctc|transport|rapido/.test(l)) return 'Transportation';
-  if (/amazon|flipkart|myntra|shopping/.test(l)) return 'Shopping';
-  if (/netflix|spotify|hotstar|prime|cinema|pvr|bookmyshow/.test(l)) return 'Entertainment';
-  if (/hospital|pharmacy|medical|clinic|apollo/.test(l)) return 'Health';
+  const l = String(desc || '').toLowerCase();
+  if (type === 'income') {
+    if (/salary|payroll|wages|technova|infosys|tcs|wipro/.test(l)) return 'Salary';
+    if (/interest|dividend|bonus/.test(l)) return 'Investment';
+    if (/freelance|client|payment received|upwork/.test(l)) return 'Freelance';
+    return 'Other Income';
+  }
+  if (/swiggy|zomato|eats|cafe|restaurant|mcdonald|starbucks|burger|kfc|pizza|biryani|food/.test(l)) return 'Food & Dining';
+  if (/uber|ola|rapido|metro|fuel|petrol|diesel|shell|indian oil|transport|toll|fastag/.test(l)) return 'Transportation';
+  if (/bigbasket|blinkit|zepto|instamart|dmart|grocery|supermarket|spencer|nature/.test(l)) return 'Groceries';
+  if (/amazon|flipkart|myntra|ajio|meesho|zara|h&m|clothing|mall|retail/.test(l)) return 'Shopping';
+  if (/netflix|spotify|hotstar|prime|cinema|pvr|inox|bookmyshow|theatre|movie/.test(l)) return 'Entertainment';
+  if (/apollo|pharmacy|hospital|medical|clinic|doctor|health|1mg|netmeds/.test(l)) return 'Health';
   if (/airtel|jio|electric|bescom|\bbill|water|recharge/.test(l)) return 'Utilities';
   if (/\brent\b|landlord/.test(l)) return 'Rent';
   if (/\bsip\b|mutual fund|investment/.test(l)) return 'Investment';
@@ -936,7 +968,7 @@ function categorize(desc, type) {
 
 function cleanDescription(text) {
   const tokens = text
-    .replace(/\d{6,}/g, ' ')                 // long reference numbers
+    .replace(/\d{6,}/g, ' ')
     .split(/[\/|]+/)
     .map(t => t.trim())
     .filter(t => t && !/^(UPI|DR|CR|NEFT|IMPS|RTGS|POS|ACH|ATM|WDL|BILLPAY|INT\.?PD|ECS|NACH)$/i.test(t));
@@ -946,7 +978,6 @@ function cleanDescription(text) {
 function parseStatementText(text) {
   const lines = String(text || '').split(/\r?\n/).map(l => l.trim()).filter(Boolean);
 
-  // 1. group lines into records: a record starts at a line beginning with a date
   const records = [];
   let cur = null;
   for (const line of lines) {
@@ -954,18 +985,17 @@ function parseStatementText(text) {
       cur = { text: line };
       records.push(cur);
     } else if (/^(closing balance|total\b|page\s+\d|statement\b|opening balance|demo statement|this is a computer)/i.test(line)) {
-      cur = null;                            // footer / summary lines end the record
+      cur = null;
     } else if (cur) {
       cur.text += ' ' + line;
     }
   }
 
-  // 2. turn each record into a transaction
   const out = [];
   let prevBalance = null;
   for (const rec of records) {
     const first = rec.text.match(DATE_AT_START);
-    const date = toIsoDate(first[1].replace(/\s+/g, ' ').trim());
+    const date = toIsoDate(first[1] || first[2] || first[3]);
     if (!date) continue;
 
     const body = rec.text.replace(DATE_ANY, ' ');
@@ -988,7 +1018,7 @@ function parseStatementText(text) {
 
     let type;
     if (balance !== null && prevBalance !== null && Math.abs(balance - prevBalance) > 0.004) {
-      type = balance > prevBalance ? 'income' : 'expense';   // balance went up = money in
+      type = balance > prevBalance ? 'income' : 'expense';
     } else {
       type = /\b(cr|credit|salary|deposit|interest|refund|received)\b/i.test(body.replace(/[\/_]/g, ' ')) ? 'income' : 'expense';
     }
@@ -1003,7 +1033,7 @@ function parseStatementText(text) {
 // Bank Statement PDF Parser
 // ---------------------------------------------------------------------------
 app.post('/api/upload-pdf-statement', upload.single('statement'), async (req, res) => {
-  const user = getCurrentUser(req, res, true);
+  const user = await getCurrentUser(req, res, true);
   if (!req.file) {
     return res.status(400).json({ error: 'No PDF statement file provided.' });
   }
@@ -1016,7 +1046,7 @@ app.post('/api/upload-pdf-statement', upload.single('statement'), async (req, re
       text = pdfData.text;
     } catch (e) {
       console.error('pdf-parse could not read the file:', e.message);
-      return res.status(400).json({ error: 'This PDF could not be read (the file looks damaged). Try opening it and saving or printing it as a new PDF, then upload again.' });
+      return res.status(400).json({ error: 'This PDF could not be read. Try saving or printing it as a new PDF, then upload again.' });
     }
 
     if (!text || text.trim().length === 0) {
@@ -1026,28 +1056,27 @@ app.post('/api/upload-pdf-statement', upload.single('statement'), async (req, re
     const parsedTransactions = parseStatementText(text);
 
     if (parsedTransactions.length === 0) {
-      return res.status(400).json({ error: 'No transactions were found. The statement needs rows that start with a date and show amounts (a text PDF, not a scanned photo).' });
+      return res.status(400).json({ error: 'No transactions were found. The statement needs rows that start with a date and show amounts.' });
     }
 
-    const insertTxn = db.prepare(`
-      INSERT INTO transactions (user_id, date, description, category, type, amount)
-      VALUES (?, ?, ?, ?, ?, ?)
-    `);
+    const docs = parsedTransactions.map(t => ({
+      user_id: user._id,
+      date: t.date,
+      description: t.description,
+      category: t.category,
+      type: t.type,
+      amount: t.amount,
+    }));
 
-    let count = 0;
-    for (const t of parsedTransactions) {
-      insertTxn.run(user.id, t.date, t.description, t.category, t.type, t.amount);
-      count++;
-    }
+    await Transaction.insertMany(docs);
 
-    db.prepare("UPDATE users SET data_source = 'uploaded', data_filename = ? WHERE id = ?").run(
-      req.file.originalname,
-      user.id
-    );
+    user.data_source = 'uploaded';
+    user.data_filename = req.file.originalname;
+    await user.save();
 
     return res.json({
-      message: `Successfully imported ${count} transactions from bank statement.`,
-      count,
+      message: `Successfully imported ${docs.length} transactions from bank statement.`,
+      count: docs.length,
       sample: parsedTransactions.slice(0, 5),
     });
   } catch (err) {
@@ -1063,13 +1092,13 @@ app.post('/api/upload-pdf-statement', upload.single('statement'), async (req, re
 // ---------------------------------------------------------------------------
 
 async function forwardToFlask(req, res, endpoint, method = 'POST') {
-  const user = getCurrentUser(req, res, false);
+  const user = await getCurrentUser(req, res, false);
   const targetUrl = `${FLASK_AI_URL}${endpoint}`;
 
   try {
     const headers = {
       'Content-Type': 'application/json',
-      'X-User-Id': user ? String(user.id) : '',
+      'X-User-Id': user ? String(user._id) : '',
     };
     if (req.headers.cookie) {
       headers['Cookie'] = req.headers.cookie;
@@ -1108,7 +1137,7 @@ app.post('/api/budget-insights', (req, res) => forwardToFlask(req, res, '/api/bu
 // ---------------------------------------------------------------------------
 app.listen(PORT, () => {
   console.log(`=================================================================`);
-  console.log(`   FinAI Node.js Express API & Auth Gateway running on:`);
+  console.log(`   FinAI Node.js Express API Gateway (MongoDB Atlas) running on:`);
   console.log(`   http://localhost:${PORT}`);
   console.log(`   AI Service target: ${FLASK_AI_URL}`);
   console.log(`=================================================================`);
